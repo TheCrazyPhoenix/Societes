@@ -1,0 +1,11 @@
+plugins {
+    id "org.spongepowered.plugin" version "0.8.1"
+}
+
+group = "com.github.thecrazyphoenix.societies"
+version = "debug"
+description = "A Sponge plugin that adds societes for the players to manage and enforce"
+
+dependencies {
+    compile group: "org.spongepowered", name: "spongeapi", version: "6.0.0"
+}
