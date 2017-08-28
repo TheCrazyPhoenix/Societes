@@ -23,6 +23,12 @@ public interface Claim extends SocietyElement {
     boolean isClaimed(Vector3i block);
 
     /**
+     * Retrieves the volume of this claim.
+     * @return The volume in blocks (i.e. cubic metres)
+     */
+    int claimVolume();
+
+    /**
      * Retrieves the permissions that are used if a rank's permission is undefined.
      * @return The retrieved permissions as a PermissionHolder of ClaimPermission.
      */
