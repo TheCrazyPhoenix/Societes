@@ -1,5 +1,6 @@
 package com.github.thecrazyphoenix.societies;
 
+import com.github.thecrazyphoenix.societies.api.SocietiesService;
 import com.github.thecrazyphoenix.societies.api.Society;
 import org.spongepowered.api.plugin.Plugin;
 
@@ -11,19 +12,15 @@ public class Societies {
     private Set<Society> societies;
     private Set<Society> allSocieties;
 
-    /**
-     * Retrieves the societies that are not owned by other societies.
-     * @return The societies as a set.
-     */
-    public Set<Society> getSocieties() {
-        return societies;
-    }
+    private class SocietiesServiceImpl implements SocietiesService {
+        @Override
+        public Set<Society> getSocieties() {
+            return societies;
+        }
 
-    /**
-     * Retrieves all the societies.
-     * @return The societies as a set.
-     */
-    public Set<Society> getAllSocieties() {
-        return societies;
+        @Override
+        public Set<Society> getAllSocieties() {
+            return societies;
+        }
     }
 }
