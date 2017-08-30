@@ -1,9 +1,9 @@
 package com.github.thecrazyphoenix.societies.api.event;
 
-import com.github.thecrazyphoenix.societies.api.Member;
+import com.github.thecrazyphoenix.societies.api.society.Member;
 import com.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
-import com.github.thecrazyphoenix.societies.api.rank.MemberRank;
+import com.github.thecrazyphoenix.societies.api.society.MemberRank;
 import org.spongepowered.api.text.Text;
 
 /**
@@ -70,7 +70,7 @@ public interface MemberChangeEvent extends SocietyChangeEvent {
     /**
      * Called when a member's permissions inside a member claim are changed.
      */
-    interface ChangeClaimPermission extends MemberChangeEvent, ClaimChangeEvent, PermissionChangeEvent {
+    interface ChangeClaimPermission extends MemberChangeEvent, MemberClaimChangeEvent, PermissionChangeEvent {
         /**
          * Retrieves the permission affected by this event.
          * @return The permission as a ClaimPermission.

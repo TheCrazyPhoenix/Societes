@@ -1,8 +1,9 @@
-package com.github.thecrazyphoenix.societies.api.rank;
+package com.github.thecrazyphoenix.societies.api.society;
 
-import com.github.thecrazyphoenix.societies.api.Member;
 import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
+import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionState;
+import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
 
 import java.util.Optional;
@@ -11,7 +12,7 @@ import java.util.Optional;
  * Stores the default values for a player's rank.
  * This shouldn't be used to get a Member's values, instead, use the equivalent method in {@link Member}
  */
-public interface MemberRank extends Taxable {
+public interface MemberRank extends Taxable, PermissionHolder<MemberPermission> {
     /**
      * Retrieves the parent rank of this rank.
      * If there is no parent, then this is the society's leaders' rank.
@@ -20,8 +21,16 @@ public interface MemberRank extends Taxable {
     Optional<MemberRank> getParent();
 
     /**
+     * Sets the parent rank of this rank.
+     * @param newParent The new parent. If null, this rank will be set to have no parent.
+     */
+    void setParent(MemberRank newParent);
+
+    /**
      * Retrieves the default title for this rank.
+     * The value must follow the same conditions as a society name.
      * @return The title, as a Text object.
+     * @see Society#getName()
      */
     Text getTitle();
 
@@ -43,17 +52,8 @@ public interface MemberRank extends Taxable {
      */
     void setDescription(Text newDescription);
 
-    /**
-     * Checks if the given permission is granted for this rank.
-     * @param permission The permission to check.
-     * @return True if the permission is granted, false otherwise.
-     */
-    boolean hasPermission(MemberPermission permission);
-
-    /**
-     * Sets a permission for this rank.
-     * @param permission The permission to set.
-     * @param newState The value the permission should be changed to.
-     */
-    void setPermission(MemberPermission permission, PermissionState newState);
+    @Override
+    default Account getAccount() {
+        throw new UnsupportedOperationException("attempt to get member rank account");
+    }
 }

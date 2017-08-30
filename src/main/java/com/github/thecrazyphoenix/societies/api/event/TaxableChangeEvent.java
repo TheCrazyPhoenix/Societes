@@ -1,6 +1,6 @@
 package com.github.thecrazyphoenix.societies.api.event;
 
-import com.github.thecrazyphoenix.societies.api.rank.Taxable;
+import com.github.thecrazyphoenix.societies.api.society.Taxable;
 
 import java.math.BigDecimal;
 

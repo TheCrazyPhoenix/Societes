@@ -1,7 +1,7 @@
 package com.github.thecrazyphoenix.societies;
 
 import com.github.thecrazyphoenix.societies.api.SocietiesService;
-import com.github.thecrazyphoenix.societies.api.Society;
+import com.github.thecrazyphoenix.societies.api.society.Society;
 import org.spongepowered.api.plugin.Plugin;
 
 import java.util.Set;

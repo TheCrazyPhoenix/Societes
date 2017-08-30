@@ -1,8 +1,8 @@
 package com.github.thecrazyphoenix.societies.api.land;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.github.thecrazyphoenix.societies.api.Member;
-import com.github.thecrazyphoenix.societies.api.SocietyElement;
+import com.github.thecrazyphoenix.societies.api.society.Member;
+import com.github.thecrazyphoenix.societies.api.society.SocietyElement;
 import com.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 
@@ -47,7 +47,15 @@ public interface MemberClaim extends SocietyElement {
     /**
      * Retrieves the permissions of the given member in this claim.
      * @param member The member whose permissions to retrieve. The member must belong to the same society as this object.
-     * @return The retrieved permissions as a PermissionHolder of ClaimPermission.
+     * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, otherwise {@link Optional#empty()}.
      */
-    PermissionHolder<ClaimPermission> getPermissions(Member member);
+    Optional<PermissionHolder<ClaimPermission>> getPermissions(Member member);
+
+    /**
+     * Sets the given member's permissions.
+     * Use this method if {@link #getPermissions(Member)} returns {@link Optional#empty()} and you wish to modify the permissions.
+     * @param member The member whose permissions to set.
+     * @param permissions The object holding those permissions. If null, the member will use the default permissions.
+     */
+    void setPermissions(Member member, PermissionHolder<ClaimPermission> permissions);
 }

@@ -1,9 +1,7 @@
-package com.github.thecrazyphoenix.societies.api;
+package com.github.thecrazyphoenix.societies.api.society;
 
 import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
-import com.github.thecrazyphoenix.societies.api.rank.MemberRank;
-import com.github.thecrazyphoenix.societies.api.rank.Taxable;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.text.Text;
 

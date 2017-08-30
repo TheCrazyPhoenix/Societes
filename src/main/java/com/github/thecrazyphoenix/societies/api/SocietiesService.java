@@ -1,5 +1,7 @@
 package com.github.thecrazyphoenix.societies.api;
 
+import com.github.thecrazyphoenix.societies.api.society.Society;
+
 import java.util.Set;
 
 /**

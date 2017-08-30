@@ -1,6 +1,6 @@
-package com.github.thecrazyphoenix.societies.api.rank;
+package com.github.thecrazyphoenix.societies.api.society;
 
-import com.github.thecrazyphoenix.societies.api.SocietyElement;
+import com.github.thecrazyphoenix.societies.api.society.SocietyElement;
 import org.spongepowered.api.service.economy.account.Account;
 
 import java.math.BigDecimal;

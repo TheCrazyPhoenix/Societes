@@ -7,12 +7,12 @@ public interface PermissionHolder<T extends Enum<T>> {
      * @param permission The permission to check.
      * @return True if the permission is granted, false otherwise.
      */
-    boolean hasPermission(MemberPermission permission);
+    boolean hasPermission(T permission);
 
     /**
      * Sets a permission for this object.
      * @param permission The permission to set.
      * @param newState The value the permission should be changed to.
      */
-    void setPermission(MemberPermission permission, PermissionState newState);
+    void setPermission(T permission, PermissionState newState);
 }

@@ -1,9 +1,6 @@
 package com.github.thecrazyphoenix.societies.api.event;
 
-import com.github.thecrazyphoenix.societies.api.Society;
 import com.github.thecrazyphoenix.societies.api.land.Claim;
-import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.impl.AbstractEvent;
 
 import java.math.BigDecimal;
 

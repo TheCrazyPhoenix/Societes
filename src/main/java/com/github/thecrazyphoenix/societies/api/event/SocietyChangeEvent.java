@@ -1,6 +1,6 @@
 package com.github.thecrazyphoenix.societies.api.event;
 
-import com.github.thecrazyphoenix.societies.api.Society;
+import com.github.thecrazyphoenix.societies.api.society.Society;
 import org.spongepowered.api.event.Cancellable;
 import org.spongepowered.api.event.Event;
 
@@ -12,7 +12,7 @@ public interface SocietyChangeEvent extends Event, Cancellable {
     /**
      * Retrieves the modified society.
      * This is the society or sub-society which is most concerned by this event.
-     * This object represents the created society for all events except {@link SocietyChangeEvent.Create}
+     * This object represents the old state for all events except {@link SocietyChangeEvent.Create}
      * @return The society affected by this event.
      */
     Society getSociety();
