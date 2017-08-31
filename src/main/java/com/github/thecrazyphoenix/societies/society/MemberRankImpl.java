@@ -4,6 +4,7 @@ import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import com.github.thecrazyphoenix.societies.api.society.MemberRank;
 import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
+import com.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.text.Text;
 
 import java.util.Optional;
@@ -40,8 +41,10 @@ public class MemberRankImpl extends AbstractTaxable<MemberPermission> implements
 
     @Override
     public void setTitle(Text newTitle) {
+        if (!CommonMethods.isValidName(newTitle.toPlain())) {
+            throw new IllegalArgumentException("illegal title: " + newTitle.toPlain());
+        }
         title = newTitle;
-        // TODO Validate this value.
     }
 
     @Override

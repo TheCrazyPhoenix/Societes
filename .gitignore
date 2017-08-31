@@ -24,3 +24,6 @@ build/
 
 # IntelliJ IDEA files
 .idea/
+
+# Minecraft Server files
+run

@@ -1,3 +1,21 @@
+buildscript {
+    repositories {
+        maven {
+            name = 'sponge'
+            url = 'https://repo.spongepowered.org/maven'
+        }
+        maven {
+            name = 'forge'
+            url = 'http://files.minecraftforge.net/maven'
+        }
+    }
+
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'org.spongepowered:mixingradle:0.4-SNAPSHOT'
+    }
+}
+
 plugins {
     id "org.spongepowered.plugin" version "0.8.1"
 }
@@ -6,6 +24,34 @@ group = "com.github.thecrazyphoenix.societies"
 version = "debug"
 description = "A Sponge plugin that adds societes for the players to manage and enforce"
 
-dependencies {
-    compile group: "org.spongepowered", name: "spongeapi", version: "6.0.0"
+dependencies {      // DependencyReportTask
+    compile(project(":SpongeCommon:SpongeAPI")) {
+        exclude module: "asm"
+    }
+}
+
+evaluationDependsOn(":SpongeCommon")
+
+apply plugin: "net.minecraftforge.gradle.tweaker-server"
+apply plugin: "org.spongepowered.mixin"
+
+evaluationDependsOn(":SpongeVanilla")
+
+childProjects.SpongeVanilla.dependencies {
+    runtime rootProject
+}
+
+childProjects.SpongeVanilla.runServer {
+    workingDir = rootProject.file("run")
+}
+
+minecraft {
+    version = childProjects.SpongeVanilla.minecraftVersion
+    tweakClass = childProjects.SpongeVanilla.minecraft.tweakClass
+    mappings = childProjects.SpongeCommon.mcpMappings
+
+    runDir = 'run'
+
+    // We don't use the obfuscated dev jar currently
+    makeObfSourceJar = false
 }

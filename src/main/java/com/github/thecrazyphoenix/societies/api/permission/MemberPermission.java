@@ -59,7 +59,7 @@ public enum MemberPermission {
     MANAGE_SUBSOCIETIES,
 
     /**
-     * Allows the player to rename the society and change its type.
+     * Allows the player to turn the society into a sub-society and delete it.
      */
     MANAGE_SOCIETY
 }

@@ -5,6 +5,7 @@ import com.github.thecrazyphoenix.societies.api.society.Member;
 import com.github.thecrazyphoenix.societies.api.society.MemberRank;
 import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.api.society.SubSociety;
+import com.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.economy.account.Account;
@@ -33,20 +34,21 @@ public class SocietyImpl implements Society {
     private Map<String, MemberRank> ranks;
 
     public SocietyImpl(EconomyService economy, Text name, Text abbreviatedName, User founder) {
-        this(economy, name);
+        if (!CommonMethods.isValidName(name.toPlain())) {
+            throw new IllegalArgumentException("illegal society name: " + name.toPlain());
+        } else if (!CommonMethods.isValidName(abbreviatedName.toPlain()) || abbreviatedName.toPlain().indexOf(' ') != -1) {
+            throw new IllegalArgumentException("illegal society abbreviated name: " + abbreviatedName.toPlain());
+        }
+        this.economy = economy;
+        this.name = name;
         this.abbreviatedName = abbreviatedName;
+        accountName = NAME_TO_ACCOUNT_PATTERN.matcher(name.toPlain()).replaceAll("_");      // Slightly faster than String#replaceAll in the long run.
         leaders.add(new MemberImpl(this, economy, founder, new MemberRankImpl(this, null, DEFAULT_FOUNDER_TITLE)));
         leaders = new HashSet<>();
         members = new HashSet<>();
         subSocieties = new HashSet<>();
         claims = new HashSet<>();
         ranks = new HashMap<>();
-    }
-
-    private SocietyImpl(EconomyService economy, Text name) {
-        this.economy = economy;
-        this.name = name;
-        accountName = NAME_TO_ACCOUNT_PATTERN.matcher(name.toPlain()).replaceAll("_");      // Slightly faster than String#replaceAll in the long run.
     }
 
     @Override
