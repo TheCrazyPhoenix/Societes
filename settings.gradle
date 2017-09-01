@@ -1,12 +1,1 @@
 rootProject.name = "Societies"
-
-include "SpongeVanilla"
-include "SpongeCommon"
-include "SpongeCommon:SpongeAPI"
-include "SpongeCommon:testplugins"
-
-String path = rootProject.projectDir
-project(":SpongeVanilla").projectDir = file(path += "/SpongeVanilla")
-project(":SpongeCommon").projectDir = file(path += "/SpongeCommon")
-project(":SpongeCommon:SpongeAPI").projectDir = file(path + "/SpongeAPI")
-project(":SpongeCommon:testplugins").projectDir = file(path + "/testplugins")

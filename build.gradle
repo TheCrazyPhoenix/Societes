@@ -1,21 +1,3 @@
-buildscript {
-    repositories {
-        maven {
-            name = 'sponge'
-            url = 'https://repo.spongepowered.org/maven'
-        }
-        maven {
-            name = 'forge'
-            url = 'http://files.minecraftforge.net/maven'
-        }
-    }
-
-    dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-        classpath 'org.spongepowered:mixingradle:0.4-SNAPSHOT'
-    }
-}
-
 plugins {
     id "org.spongepowered.plugin" version "0.8.1"
 }
@@ -24,34 +6,16 @@ group = "com.github.thecrazyphoenix.societies"
 version = "debug"
 description = "A Sponge plugin that adds societes for the players to manage and enforce"
 
-dependencies {      // DependencyReportTask
-    compile(project(":SpongeCommon:SpongeAPI")) {
-        exclude module: "asm"
+String spongeImplName = "spongevanilla"
+String spongeImplVersion = "1.12.1-7.0.0-BETA-320"
+
+dependencies {
+    compile group: "org.spongepowered", name: "spongeapi", version: "7.0.0-SNAPSHOT"
+    runtime(group: "org.spongepowered", name: spongeImplName, version: spongeImplVersion) {
+        exclude module: "terminalconsoleappender"
+        exclude module: "testplugins"
     }
 }
 
-evaluationDependsOn(":SpongeCommon")
-
-apply plugin: "net.minecraftforge.gradle.tweaker-server"
-apply plugin: "org.spongepowered.mixin"
-
-evaluationDependsOn(":SpongeVanilla")
-
-childProjects.SpongeVanilla.dependencies {
-    runtime rootProject
-}
-
-childProjects.SpongeVanilla.runServer {
-    workingDir = rootProject.file("run")
-}
-
-minecraft {
-    version = childProjects.SpongeVanilla.minecraftVersion
-    tweakClass = childProjects.SpongeVanilla.minecraft.tweakClass
-    mappings = childProjects.SpongeCommon.mcpMappings
-
-    runDir = 'run'
-
-    // We don't use the obfuscated dev jar currently
-    makeObfSourceJar = false
-}
+// Make sure SpongeVanilla is before the plugin in the classpath so that it can read its mcmod.info
+sourceSets.main.runtimeClasspath = files(sourceSets.main.runtimeClasspath.sort { a, b -> a.name == "$spongeImplName-${spongeImplVersion}.jar" ? -1 : b.name == "$spongeImplName-${spongeImplVersion}.jar" ? 1 : 0 })
