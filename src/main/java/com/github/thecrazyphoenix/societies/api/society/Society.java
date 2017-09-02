@@ -12,6 +12,12 @@ import java.util.Set;
  */
 public interface Society {
     /**
+     * Retrieves the unique identifier of this society.
+     * @return The identifier as a string.
+     */
+    String getIdentifier();
+
+    /**
      * Retrieves the name of this society.
      * The unformatted value must be unique, non-empty and may only contain alphanumeric characters, spaces and -&#;:.?!
      * @return The name as a Text object.
@@ -38,12 +44,6 @@ public interface Society {
     Set<Member> getMembers();
 
     /**
-     * Retrieves the societies directly under this society's authority. Indirect sub-societies are not included.
-     * @return The sub-societies as a set.
-     */
-    Set<SubSociety> getSubSocieties();
-
-    /**
      * Retrieves the claims owned by this society.
      * If this society is a sub-society, these claims will be in the claims of the parent society.
      * @return The claims as a set.
@@ -55,6 +55,12 @@ public interface Society {
      * @return The ranks as a string-indexed map.
      */
     Map<String, MemberRank> getRanks();
+
+    /**
+     * Retrieves the societies directly under this society's authority. Indirect sub-societies are not included.
+     * @return The sub-societies as a string-indexed map.
+     */
+    Map<String, SubSociety> getSubSocieties();
 
     /**
      * Retrieves this society's account.

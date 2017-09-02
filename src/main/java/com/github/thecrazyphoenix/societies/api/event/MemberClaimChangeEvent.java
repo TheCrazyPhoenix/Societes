@@ -1,6 +1,7 @@
 package com.github.thecrazyphoenix.societies.api.event;
 
 import com.github.thecrazyphoenix.societies.api.land.MemberClaim;
+import com.github.thecrazyphoenix.societies.api.society.Member;
 
 /**
  * Base event for when a member claim is modified.
@@ -25,13 +26,13 @@ public interface MemberClaimChangeEvent extends ClaimChangeEvent {
     interface Destroy extends MemberClaimChangeEvent {}
 
     /**
-     * Called when a member buys a member claim from a society.
+     * Called when a member claim changes owner.
      */
-    interface Buy extends MemberClaimChangeEvent {}
-
-    /**
-     * Called when a member sells a member claim to a society.
-     * When this event occurs, the member claim is available for repurchase or destruction.
-     */
-    interface Sell extends MemberClaimChangeEvent {}
+    interface ChangeOwner extends MemberClaimChangeEvent {
+        /**
+         * Retrieves the member claim's new owner.
+         * @return The new owner.
+         */
+        Member getNewOwner();
+    }
 }

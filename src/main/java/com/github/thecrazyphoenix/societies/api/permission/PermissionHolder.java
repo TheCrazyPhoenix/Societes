@@ -1,5 +1,7 @@
 package com.github.thecrazyphoenix.societies.api.permission;
 
+import org.spongepowered.api.event.cause.Cause;
+
 public interface PermissionHolder<T extends Enum<T>> {
     /**
      * Checks if the given permission is granted for this object.
@@ -13,6 +15,8 @@ public interface PermissionHolder<T extends Enum<T>> {
      * Sets a permission for this object.
      * @param permission The permission to set.
      * @param newState The value the permission should be changed to.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
      */
-    void setPermission(T permission, PermissionState newState);
+    boolean setPermission(T permission, PermissionState newState, Cause cause);
 }

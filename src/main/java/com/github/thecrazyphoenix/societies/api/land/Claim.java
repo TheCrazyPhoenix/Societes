@@ -1,11 +1,11 @@
 package com.github.thecrazyphoenix.societies.api.land;
 
-import com.flowpowered.math.vector.Vector3i;
-import com.github.thecrazyphoenix.societies.api.society.Society;
-import com.github.thecrazyphoenix.societies.api.society.SocietyElement;
 import com.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import com.github.thecrazyphoenix.societies.api.society.MemberRank;
+import com.github.thecrazyphoenix.societies.api.society.SocietyElement;
+import com.github.thecrazyphoenix.societies.api.society.SubSociety;
+import org.spongepowered.api.event.cause.Cause;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -14,19 +14,13 @@ import java.util.Set;
 /**
  * Models a claim owned by a society.
  */
-public interface Claim extends SocietyElement {
+public interface Claim extends SocietyElement, ClaimedLand {
     /**
-     * Checks if this claim protects the given block.
-     * @param block The block to check
-     * @return True if the block is protected, false otherwise.
+     * Retrieves the cuboids that make up this claim.
+     * The cuboids may overlap.
+     * @return The cuboids as a mutable set.
      */
-    boolean isClaimed(Vector3i block);
-
-    /**
-     * Retrieves the volume of this claim.
-     * @return The volume in blocks (i.e. cubic metres)
-     */
-    int getClaimedVolume();
+    Set<Cuboid> getClaimCuboids();
 
     /**
      * Retrieves the permissions that are used if a rank's permissions are undefined.
@@ -50,24 +44,25 @@ public interface Claim extends SocietyElement {
     void setPermissions(MemberRank rank, PermissionHolder<ClaimPermission> permissions);
 
     /**
-     * Retrieves the permissions of a given sub-society or allied society.
+     * Retrieves the permissions of a given sub-society.
      * @param subSociety The society whose permissions to retrieve.
      * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, otherwise {@link Optional#empty()}.
      */
-    Optional<PermissionHolder<ClaimPermission>> getPermissions(Society subSociety);
+    Optional<PermissionHolder<ClaimPermission>> getPermissions(SubSociety subSociety);
 
     /**
-     * Sets the given society's permissions.
-     * Use this method if {@link #getPermissions(Society)} returns {@link Optional#empty()} and you wish to modify the permissions.
-     * @param society The society whose permissions to set. If null, the society will use the default permissions.
-     * @param permissions The object holding those permissions.
+     * Sets the given sub-society's permissions.
+     * Use this method if {@link #getPermissions(SubSociety)} returns {@link Optional#empty()} and you wish to modify the permissions.
+     * @param subSociety The sub-society whose permissions to set.
+     * @param permissions The object holding those permissions. If null, the sub-society will use the default permissions.
      */
-    void setPermissions(Society society, PermissionHolder<ClaimPermission> permissions);
+    void setPermissions(SubSociety subSociety, PermissionHolder<ClaimPermission> permissions);
 
     /**
      * Retrieves all the member claims this claim contains.
-     * This set must be mutable.
-     * @return The retrieved member claims as a Set.
+     * Before modifying this set, users should check {@link #isContaining(Cuboid)} on the MemberClaim to ensure that the member claim is correctly classified.
+     * Modifying this set with an invalid value may cause undefined behaviour.
+     * @return The retrieved member claims as a mutable set.
      */
     Set<MemberClaim> getMemberClaims();
 
@@ -80,8 +75,10 @@ public interface Claim extends SocietyElement {
     /**
      * Sets the land tax.
      * @param value The rate per block per day to set it to.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
      */
-    void setLandTax(BigDecimal value);
+    boolean setLandTax(BigDecimal value, Cause cause);
 
     /**
      * Retrieves the cost of buying land in this claim.
@@ -93,6 +90,8 @@ public interface Claim extends SocietyElement {
     /**
      * Sets the land value.
      * @param value The value per block to set it to.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
      */
-    void setLandValue(BigDecimal value);
+    boolean setLandValue(BigDecimal value, Cause cause);
 }

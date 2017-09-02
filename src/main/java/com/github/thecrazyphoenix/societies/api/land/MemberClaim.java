@@ -5,6 +5,8 @@ import com.github.thecrazyphoenix.societies.api.society.Member;
 import com.github.thecrazyphoenix.societies.api.society.SocietyElement;
 import com.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.service.economy.transaction.TransactionResult;
 
 import java.util.Optional;
 
@@ -12,25 +14,21 @@ import java.util.Optional;
  * Models a member claim (as in owned by a player) within a society claim.
  * Players must buy these from the society and can sell them back if they so wish.
  */
-public interface MemberClaim extends SocietyElement {
-    /**
-     * Checks if the given block is claimed.
-     * @param block The coordinates of the block to check.
-     * @return True if this claim protects that block, false otherwise.
-     */
-    boolean isClaimed(Vector3i block);
-
-    /**
-     * Retrieves the volume of this claim.
-     * @return The volume of the claim in blocks (cubic metres).
-     */
-    int getClaimedVolume();
-
+public interface MemberClaim extends SocietyElement, Cuboid {
     /**
      * Retrieves the owner of this claim.
      * @return The owner if this claim is owned, {@link Optional#empty()} otherwise.
      */
     Optional<Member> getOwner();
+
+    /**
+     * Sets this member claim's new owner.
+     * This will not perform the transaction associated with purchasing the claim.
+     * @param newOwner The new owner of this claim.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
+     */
+    boolean setOwner(Member newOwner, Cause cause);
 
     /**
      * Retrieves the claim this member claim is in.

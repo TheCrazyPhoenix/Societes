@@ -3,6 +3,7 @@ package com.github.thecrazyphoenix.societies.api.society;
 import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionState;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
 
@@ -23,8 +24,10 @@ public interface MemberRank extends Taxable, PermissionHolder<MemberPermission> 
     /**
      * Sets the parent rank of this rank.
      * @param newParent The new parent. If null, this rank will be set to have no parent.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
      */
-    void setParent(MemberRank newParent);
+    boolean setParent(MemberRank newParent, Cause cause);
 
     /**
      * Retrieves the default title for this rank.
@@ -37,8 +40,10 @@ public interface MemberRank extends Taxable, PermissionHolder<MemberPermission> 
     /**
      * Sets the default title for this rank.
      * @param newTitle The new default title, as a Text object.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
      */
-    void setTitle(Text newTitle);
+    boolean setTitle(Text newTitle, Cause cause);
 
     /**
      * Retrieves the description of this rank.
@@ -49,8 +54,10 @@ public interface MemberRank extends Taxable, PermissionHolder<MemberPermission> 
     /**
      * Sets the description of this rank.
      * @param newDescription The new description as a Text object.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
      */
-    void setDescription(Text newDescription);
+    boolean setDescription(Text newDescription, Cause cause);
 
     @Override
     default Account getAccount() {

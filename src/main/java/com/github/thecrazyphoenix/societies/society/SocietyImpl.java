@@ -1,12 +1,16 @@
 package com.github.thecrazyphoenix.societies.society;
 
+import com.github.thecrazyphoenix.societies.Societies;
 import com.github.thecrazyphoenix.societies.api.land.Claim;
 import com.github.thecrazyphoenix.societies.api.society.Member;
 import com.github.thecrazyphoenix.societies.api.society.MemberRank;
 import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.api.society.SubSociety;
+import com.github.thecrazyphoenix.societies.event.SocietyChangeEventImpl;
 import com.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
@@ -18,37 +22,46 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class SocietyImpl implements Society {
-    private static final Pattern NAME_TO_ACCOUNT_PATTERN = Pattern.compile("\\s");
     private static final Text DEFAULT_FOUNDER_TITLE = Text.of("Founder");
 
-    private EconomyService economy;
+    private Societies societies;
 
+    private String id;
     private Text name;
     private Text abbreviatedName;
     private String accountName;
 
     private Set<Member> leaders;
     private Set<Member> members;
-    private Set<SubSociety> subSocieties;
     private Set<Claim> claims;
     private Map<String, MemberRank> ranks;
+    private Map<String, SubSociety> subSocieties;
 
-    public SocietyImpl(EconomyService economy, Text name, Text abbreviatedName, User founder) {
+    public SocietyImpl(Societies societies, Text name, Text abbreviatedName, User founder) {
+        this(societies, name, abbreviatedName);
+        leaders.add(new MemberImpl(societies, this, founder, new MemberRankImpl(societies, this, null, DEFAULT_FOUNDER_TITLE)));
+    }
+
+    public SocietyImpl(Societies societies, Text name, Text abbreviatedName) {
         if (!CommonMethods.isValidName(name.toPlain())) {
             throw new IllegalArgumentException("illegal society name: " + name.toPlain());
         } else if (!CommonMethods.isValidName(abbreviatedName.toPlain()) || abbreviatedName.toPlain().indexOf(' ') != -1) {
             throw new IllegalArgumentException("illegal society abbreviated name: " + abbreviatedName.toPlain());
         }
-        this.economy = economy;
+        this.societies = societies;
         this.name = name;
         this.abbreviatedName = abbreviatedName;
-        accountName = NAME_TO_ACCOUNT_PATTERN.matcher(name.toPlain()).replaceAll("_");      // Slightly faster than String#replaceAll in the long run.
-        leaders.add(new MemberImpl(this, economy, founder, new MemberRankImpl(this, null, DEFAULT_FOUNDER_TITLE)));
+        accountName = String.format("%s:%s", Societies.PLUGIN_ID, id = CommonMethods.nameToID(name));      // Slightly faster than String#replaceAll in the long run.
         leaders = new HashSet<>();
         members = new HashSet<>();
-        subSocieties = new HashSet<>();
         claims = new HashSet<>();
         ranks = new HashMap<>();
+        subSocieties = new HashMap<>();
+    }
+
+    @Override
+    public String getIdentifier() {
+        return id;
     }
 
     @Override
@@ -72,11 +85,6 @@ public class SocietyImpl implements Society {
     }
 
     @Override
-    public Set<SubSociety> getSubSocieties() {
-        return subSocieties;
-    }
-
-    @Override
     public Set<Claim> getClaims() {
         return claims;
     }
@@ -87,7 +95,12 @@ public class SocietyImpl implements Society {
     }
 
     @Override
+    public Map<String, SubSociety> getSubSocieties() {
+        return subSocieties;
+    }
+
+    @Override
     public Account getAccount() {
-        return economy.getOrCreateAccount(accountName).orElseThrow(IllegalStateException::new);
+        return societies.getEconomyService().getOrCreateAccount(accountName).orElseThrow(IllegalStateException::new);
     }
 }

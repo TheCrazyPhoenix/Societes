@@ -1,5 +1,6 @@
 package com.github.thecrazyphoenix.societies.event;
 
+import com.github.thecrazyphoenix.societies.api.society.Member;
 import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.api.event.MemberClaimChangeEvent;
 import com.github.thecrazyphoenix.societies.api.land.Claim;
@@ -31,15 +32,17 @@ public class MemberClaimChangeEventImpl extends ClaimChangeEventImpl implements 
         }
     }
 
-    public static class Buy extends MemberClaimChangeEventImpl implements MemberClaimChangeEvent.Buy {
-        public Buy(Cause cause, Society society, Claim claim, MemberClaim memberClaim) {
-            super(cause, society, claim, memberClaim);
-        }
-    }
+    public static class ChangeOwner extends MemberClaimChangeEventImpl implements MemberClaimChangeEvent.ChangeOwner {
+        private Member newOwner;
 
-    public static class Sell extends MemberClaimChangeEventImpl implements MemberClaimChangeEvent.Sell {
-        public Sell(Cause cause, Society society, Claim claim, MemberClaim memberClaim) {
+        public ChangeOwner(Cause cause, Society society, Claim claim, MemberClaim memberClaim, Member newOwner) {
             super(cause, society, claim, memberClaim);
+            this.newOwner = newOwner;
+        }
+
+        @Override
+        public Member getNewOwner() {
+            return newOwner;
         }
     }
 }

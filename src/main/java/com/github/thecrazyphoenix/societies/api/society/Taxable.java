@@ -1,6 +1,7 @@
 package com.github.thecrazyphoenix.societies.api.society;
 
 import com.github.thecrazyphoenix.societies.api.society.SocietyElement;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
 
 import java.math.BigDecimal;
@@ -25,14 +26,18 @@ public interface Taxable extends SocietyElement {
     /**
      * Sets the fixed amount of money this Taxable pays in taxes.
      * @param newTax The new fixed tax rate paid daily.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
      */
-    void setFixedTax(BigDecimal newTax);
+    boolean setFixedTax(BigDecimal newTax, Cause cause);
 
     /**
      * Sets the amount of money this Taxable receives from the society.
      * @param newSalary The new salary received daily.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
      */
-    void setSalary(BigDecimal newSalary);
+    boolean setSalary(BigDecimal newSalary, Cause cause);
 
     /**
      * Retrieves this Taxable's account.

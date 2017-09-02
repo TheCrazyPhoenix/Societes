@@ -1,26 +1,29 @@
 package com.github.thecrazyphoenix.societies.land;
 
+import com.flowpowered.math.vector.Vector3i;
+import com.github.thecrazyphoenix.societies.Societies;
 import com.github.thecrazyphoenix.societies.api.land.Claim;
 import com.github.thecrazyphoenix.societies.api.land.MemberClaim;
 import com.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import com.github.thecrazyphoenix.societies.api.society.Member;
-import com.github.thecrazyphoenix.societies.api.society.Society;
+import com.github.thecrazyphoenix.societies.event.MemberClaimChangeEventImpl;
 import com.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
+import org.spongepowered.api.event.cause.Cause;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class MemberClaimImpl extends CuboidClaim implements MemberClaim {
+public class MemberClaimImpl extends CuboidImpl implements MemberClaim {
     private Claim parent;
     private Member owner;
 
     private PermissionHolder<ClaimPermission> defaultPermissions;
     private Map<Member, PermissionHolder<ClaimPermission>> memberPermissions;
 
-    public MemberClaimImpl(Claim parent, Member owner, PermissionHolder<ClaimPermission> defaultPermissions) {
-        super(parent.getSociety());
+    public MemberClaimImpl(Societies societies, Claim parent, Member owner, PermissionHolder<ClaimPermission> defaultPermissions, Vector3i corner1, Vector3i corner2) {
+        super(societies, parent.getSociety(), corner1, corner2);
         this.parent = parent;
         this.owner = owner;
         this.defaultPermissions = defaultPermissions;
@@ -36,6 +39,15 @@ public class MemberClaimImpl extends CuboidClaim implements MemberClaim {
     @Override
     public Optional<Member> getOwner() {
         return Optional.ofNullable(owner);
+    }
+
+    @Override
+    public boolean setOwner(Member newOwner, Cause cause) {
+        if (!societies.queueEvent(new MemberClaimChangeEventImpl.ChangeOwner(cause, society, parent, this, newOwner))) {
+            owner = newOwner;
+            return true;
+        }
+        return false;
     }
 
     @Override

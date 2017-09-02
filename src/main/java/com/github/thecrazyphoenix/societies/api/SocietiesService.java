@@ -2,6 +2,7 @@ package com.github.thecrazyphoenix.societies.api;
 
 import com.github.thecrazyphoenix.societies.api.society.Society;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -15,11 +16,11 @@ public interface SocietiesService {
      * Retrieves the societies that are not owned by other societies.
      * @return The societies as a set.
      */
-    Set<Society> getSocieties();
+    Map<String, Society> getSocieties();
 
     /**
      * Retrieves all the societies.
      * @return The societies as a set.
      */
-    Set<Society> getAllSocieties();
+    Map<String, Society> getAllSocieties();
 }

@@ -1,10 +1,13 @@
 package com.github.thecrazyphoenix.societies.society;
 
+import com.github.thecrazyphoenix.societies.Societies;
 import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import com.github.thecrazyphoenix.societies.api.society.Member;
 import com.github.thecrazyphoenix.societies.api.society.MemberRank;
 import com.github.thecrazyphoenix.societies.api.society.Society;
+import com.github.thecrazyphoenix.societies.event.MemberChangeEventImpl;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
@@ -14,11 +17,8 @@ public class MemberImpl extends AbstractTaxable<MemberPermission> implements Mem
     private MemberRank rank;
     private Text title;
 
-    private EconomyService economy;
-
-    public MemberImpl(Society society, EconomyService economy, User user, MemberRank rank) {
-        super(society, rank, rank);
-        this.economy = economy;
+    public MemberImpl(Societies societies, Society society, User user, MemberRank rank) {
+        super(societies, society, rank, rank);
         this.user = user;
         this.rank = rank;
         society.getMembers().add(this);
@@ -40,12 +40,16 @@ public class MemberImpl extends AbstractTaxable<MemberPermission> implements Mem
     }
 
     @Override
-    public void setTitle(Text newTitle) {
-        title = newTitle;
+    public boolean setTitle(Text newTitle, Cause cause) {
+        if (!societies.queueEvent(new MemberChangeEventImpl.ChangeTitle(cause, society, this, newTitle))) {
+            title = newTitle;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public Account getAccount() {
-        return economy.getOrCreateAccount(user.getUniqueId()).orElseThrow(IllegalStateException::new);
+        return societies.getEconomyService().getOrCreateAccount(user.getUniqueId()).orElseThrow(IllegalStateException::new);
     }
 }

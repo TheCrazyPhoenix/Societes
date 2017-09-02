@@ -10,6 +10,8 @@ import com.github.thecrazyphoenix.societies.api.society.MemberRank;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
+import java.util.Optional;
+
 public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements MemberRankChangeEvent {
     private MemberRank memberRank;
 
@@ -48,6 +50,20 @@ public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements
         @Override
         public MemberRank getMemberRank() {
             return memberRank;
+        }
+    }
+
+    public static class ChangeParent extends MemberRankChangeEventImpl implements MemberRankChangeEvent.ChangeParent {
+        private MemberRank newParent;
+
+        public ChangeParent(Cause cause, Society society, MemberRank memberRank, MemberRank newParent) {
+            super(cause, society, memberRank);
+            this.newParent = newParent;
+        }
+
+        @Override
+        public Optional<MemberRank> getNewParent() {
+            return Optional.ofNullable(newParent);
         }
     }
 

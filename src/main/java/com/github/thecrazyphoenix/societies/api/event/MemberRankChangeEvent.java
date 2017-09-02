@@ -5,6 +5,8 @@ import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import com.github.thecrazyphoenix.societies.api.society.MemberRank;
 import org.spongepowered.api.text.Text;
 
+import java.util.Optional;
+
 /**
  * Base event for when a member rank's title, description or permissions change.
  */
@@ -25,6 +27,17 @@ public interface MemberRankChangeEvent extends SocietyChangeEvent {
      * Called when a member rank is destroyed.
      */
     interface Destroy extends MemberRankChangeEvent, TaxableChangeEvent.Destroy {}
+
+    /**
+     * Called when a member rank's parent is changed.
+     */
+    interface ChangeParent extends MemberRankChangeEvent {
+        /**
+         * Retrieves the member rank's new parent.
+         * @return The new parent if it exists, otherwise {@link Optional#empty()}.
+         */
+        Optional<MemberRank> getNewParent();
+    }
 
     /**
      * Called when a member rank's title is changed.

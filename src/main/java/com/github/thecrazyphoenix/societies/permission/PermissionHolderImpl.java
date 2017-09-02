@@ -1,9 +1,14 @@
 package com.github.thecrazyphoenix.societies.permission;
 
+import com.github.thecrazyphoenix.societies.Societies;
+import com.github.thecrazyphoenix.societies.api.event.PermissionChangeEvent;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import com.github.thecrazyphoenix.societies.api.society.Society;
+import com.github.thecrazyphoenix.societies.event.PermissionChangeEventImpl;
 import com.github.thecrazyphoenix.societies.society.SocietyElementImpl;
+import ninja.leaping.configurate.ConfigurationNode;
+import org.spongepowered.api.event.cause.Cause;
 
 import java.util.Map;
 
@@ -11,8 +16,8 @@ public class PermissionHolderImpl<T extends Enum<T>> extends SocietyElementImpl 
     private PermissionHolder<T> parent;
     private Map<T, PermissionState> permissions;
 
-    public PermissionHolderImpl(Society society, PermissionHolder<T> parent) {
-        super(society);
+    public PermissionHolderImpl(Societies societies, Society society, PermissionHolder<T> parent) {
+        super(societies, society);
     }
 
     @Override
@@ -29,7 +34,15 @@ public class PermissionHolderImpl<T extends Enum<T>> extends SocietyElementImpl 
     }
 
     @Override
-    public void setPermission(T permission, PermissionState newState) {
-        permissions.put(permission, newState);
+    public boolean setPermission(T permission, PermissionState newState, Cause cause) {
+        return setPermission(permission, newState, new PermissionChangeEventImpl(cause, society, permission, newState));
+    }
+
+    protected boolean setPermission(T permission, PermissionState newState, PermissionChangeEvent event) {
+        if (!societies.queueEvent(event)) {
+            permissions.put(permission, newState);
+            return true;
+        }
+        return false;
     }
 }

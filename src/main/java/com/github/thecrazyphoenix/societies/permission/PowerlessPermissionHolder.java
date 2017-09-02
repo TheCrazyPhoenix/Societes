@@ -5,6 +5,7 @@ import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import com.github.thecrazyphoenix.societies.api.permission.SocietyPermission;
+import org.spongepowered.api.event.cause.Cause;
 
 public class PowerlessPermissionHolder<T extends Enum<T>> implements PermissionHolder<T> {
     public static final PowerlessPermissionHolder<MemberPermission> MEMBER = new PowerlessPermissionHolder<>();
@@ -17,7 +18,7 @@ public class PowerlessPermissionHolder<T extends Enum<T>> implements PermissionH
     }
 
     @Override
-    public void setPermission(T permission, PermissionState newState) {
-        // Ignore this.
+    public boolean setPermission(T permission, PermissionState newState, Cause cause) {
+        return false;
     }
 }

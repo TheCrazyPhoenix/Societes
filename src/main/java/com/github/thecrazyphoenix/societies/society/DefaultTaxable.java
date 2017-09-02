@@ -1,14 +1,16 @@
 package com.github.thecrazyphoenix.societies.society;
 
+import com.github.thecrazyphoenix.societies.Societies;
 import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.api.society.Taxable;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
 
 import java.math.BigDecimal;
 
 public class DefaultTaxable<T extends Enum<T>> extends SocietyElementImpl implements Taxable {
-    public DefaultTaxable(Society society) {
-        super(society);
+    public DefaultTaxable(Societies societies, Society society) {
+        super(societies, society);
     }
 
     @Override
@@ -22,12 +24,12 @@ public class DefaultTaxable<T extends Enum<T>> extends SocietyElementImpl implem
     }
 
     @Override
-    public void setFixedTax(BigDecimal newTax) {
+    public boolean setFixedTax(BigDecimal newTax, Cause cause) {
         throw new UnsupportedOperationException("unused method call, report this to the developer");
     }
 
     @Override
-    public void setSalary(BigDecimal newSalary) {
+    public boolean setSalary(BigDecimal newSalary, Cause cause) {
         throw new UnsupportedOperationException("unused method call, report this to the developer");
     }
 

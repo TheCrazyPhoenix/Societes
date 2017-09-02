@@ -3,6 +3,7 @@ package com.github.thecrazyphoenix.societies.api.society;
 import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
 /**
@@ -31,6 +32,8 @@ public interface Member extends Taxable, PermissionHolder<MemberPermission> {
     /**
      * Sets the default title for this rank.
      * @param newTitle The new title, as a Text object.
+     * @param cause The cause of this modification.
+     * @return True if the modification took place, false otherwise.
      */
-    void setTitle(Text newTitle);
+    boolean setTitle(Text newTitle, Cause cause);
 }

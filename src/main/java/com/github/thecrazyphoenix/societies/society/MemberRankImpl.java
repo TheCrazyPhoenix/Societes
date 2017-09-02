@@ -1,10 +1,13 @@
 package com.github.thecrazyphoenix.societies.society;
 
+import com.github.thecrazyphoenix.societies.Societies;
 import com.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import com.github.thecrazyphoenix.societies.api.society.MemberRank;
 import com.github.thecrazyphoenix.societies.api.society.Society;
+import com.github.thecrazyphoenix.societies.event.MemberRankChangeEventImpl;
 import com.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
 import com.github.thecrazyphoenix.societies.util.CommonMethods;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
 import java.util.Optional;
@@ -14,12 +17,12 @@ public class MemberRankImpl extends AbstractTaxable<MemberPermission> implements
     private Text title;
     private Text description;
 
-    public MemberRankImpl(Society society, MemberRank parent, Text title) {
-        super(society, new DefaultTaxable<>(society), PowerlessPermissionHolder.MEMBER);
+    public MemberRankImpl(Societies societies, Society society, MemberRank parent, Text title) {
+        super(societies, society, new DefaultTaxable<>(societies, society), PowerlessPermissionHolder.MEMBER);
         this.parent = parent;
         this.title = title;
         description = Text.EMPTY;
-        if (society.getRanks().putIfAbsent(title.toPlain(), this) != null) {
+        if (society.getRanks().putIfAbsent(CommonMethods.nameToID(title), this) != null) {
             throw new IllegalArgumentException("title must be unique");
         }
     }
@@ -30,8 +33,12 @@ public class MemberRankImpl extends AbstractTaxable<MemberPermission> implements
     }
 
     @Override
-    public void setParent(MemberRank newParent) {
-        parent = newParent;
+    public boolean setParent(MemberRank newParent, Cause cause) {
+        if (!societies.queueEvent(new MemberRankChangeEventImpl.ChangeParent(cause, society, this, newParent))) {
+            parent = newParent;
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -40,11 +47,14 @@ public class MemberRankImpl extends AbstractTaxable<MemberPermission> implements
     }
 
     @Override
-    public void setTitle(Text newTitle) {
+    public boolean setTitle(Text newTitle, Cause cause) {
         if (!CommonMethods.isValidName(newTitle.toPlain())) {
             throw new IllegalArgumentException("illegal title: " + newTitle.toPlain());
+        } else if (!societies.queueEvent(new MemberRankChangeEventImpl.ChangeTitle(cause, society, this, newTitle))) {
+            title = newTitle;
+            return true;
         }
-        title = newTitle;
+        return false;
     }
 
     @Override
@@ -53,7 +63,11 @@ public class MemberRankImpl extends AbstractTaxable<MemberPermission> implements
     }
 
     @Override
-    public void setDescription(Text newDescription) {
-        description = newDescription;
+    public boolean setDescription(Text newDescription, Cause cause) {
+        if (!societies.queueEvent(new MemberRankChangeEventImpl.ChangeDescription(cause, society, this, newDescription))) {
+            description = newDescription;
+            return true;
+        }
+        return false;
     }
 }
