@@ -1,17 +1,16 @@
 package com.github.thecrazyphoenix.societies.event;
 
-import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.api.event.ClaimChangeEvent;
 import com.github.thecrazyphoenix.societies.api.land.Claim;
 import org.spongepowered.api.event.cause.Cause;
 
 import java.math.BigDecimal;
 
-public class ClaimChangeEventImpl extends SocietyChangeEventImpl implements ClaimChangeEvent {
+public class ClaimChangeEventImpl extends SocietyElementChangeEventImpl implements ClaimChangeEvent {
     private Claim claim;
 
-    public ClaimChangeEventImpl(Cause cause, Society society, Claim claim) {
-        super(cause, society);
+    public ClaimChangeEventImpl(Cause cause, Claim claim) {
+        super(cause, claim);
         this.claim = claim;
     }
 
@@ -21,22 +20,22 @@ public class ClaimChangeEventImpl extends SocietyChangeEventImpl implements Clai
     }
 
     public static class Create extends ClaimChangeEventImpl implements ClaimChangeEvent.Create {
-        public Create(Cause cause, Society society, Claim claim) {
-            super(cause, society, claim);
+        public Create(Cause cause, Claim claim) {
+            super(cause, claim);
         }
     }
 
     public static class Destroy extends ClaimChangeEventImpl implements ClaimChangeEvent.Destroy {
-        public Destroy(Cause cause, Society society, Claim claim) {
-            super(cause, society, claim);
+        public Destroy(Cause cause, Claim claim) {
+            super(cause, claim);
         }
     }
 
     public static class ChangeVolume extends ClaimChangeEventImpl implements ClaimChangeEvent.ChangeVolume {
         private int newVolume;
 
-        public ChangeVolume(Cause cause, Society society, Claim claim, int newVolume) {
-            super(cause, society, claim);
+        public ChangeVolume(Cause cause, Claim claim, int newVolume) {
+            super(cause, claim);
             this.newVolume = newVolume;
         }
 
@@ -49,8 +48,8 @@ public class ClaimChangeEventImpl extends SocietyChangeEventImpl implements Clai
     public static class ChangeLandValue extends ClaimChangeEventImpl implements ClaimChangeEvent.ChangeLandValue {
         private BigDecimal newLandValue;
 
-        public ChangeLandValue(Cause cause, Society society, Claim claim, BigDecimal newLandValue) {
-            super(cause, society, claim);
+        public ChangeLandValue(Cause cause, Claim claim, BigDecimal newLandValue) {
+            super(cause, claim);
             this.newLandValue = newLandValue;
         }
 
@@ -63,8 +62,8 @@ public class ClaimChangeEventImpl extends SocietyChangeEventImpl implements Clai
     public static class ChangeLandTax extends ClaimChangeEventImpl implements ClaimChangeEvent.ChangeLandTax {
         private BigDecimal newLandTax;
 
-        public ChangeLandTax(Cause cause, Society society, Claim claim, BigDecimal newLandTax) {
-            super(cause, society, claim);
+        public ChangeLandTax(Cause cause, Claim claim, BigDecimal newLandTax) {
+            super(cause, claim);
             this.newLandTax = newLandTax;
         }
 

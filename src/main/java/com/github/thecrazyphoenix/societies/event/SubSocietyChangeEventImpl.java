@@ -5,11 +5,11 @@ import com.github.thecrazyphoenix.societies.api.event.SubSocietyChangeEvent;
 import com.github.thecrazyphoenix.societies.api.society.Taxable;
 import org.spongepowered.api.event.cause.Cause;
 
-public class SubSocietyChangeEventImpl extends SocietyChangeEventImpl implements SubSocietyChangeEvent {
+public class SubSocietyChangeEventImpl extends TaxableChangeEventImpl implements SubSocietyChangeEvent {
     private SubSociety subSociety;
 
     public SubSocietyChangeEventImpl(Cause cause, SubSociety subSociety) {
-        super(cause, subSociety.toSociety());
+        super(cause, subSociety);
         this.subSociety = subSociety;
     }
 

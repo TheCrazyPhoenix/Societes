@@ -1,6 +1,5 @@
 package com.github.thecrazyphoenix.societies.event;
 
-import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.api.event.MemberRankChangeEvent;
 import com.github.thecrazyphoenix.societies.api.land.Claim;
 import com.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
@@ -12,11 +11,11 @@ import org.spongepowered.api.text.Text;
 
 import java.util.Optional;
 
-public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements MemberRankChangeEvent {
+public class MemberRankChangeEventImpl extends TaxableChangeEventImpl implements MemberRankChangeEvent {
     private MemberRank memberRank;
 
-    public MemberRankChangeEventImpl(Cause cause, Society society, MemberRank memberRank) {
-        super(cause, society);
+    public MemberRankChangeEventImpl(Cause cause, MemberRank memberRank) {
+        super(cause, memberRank);
         this.memberRank = memberRank;
     }
 
@@ -28,8 +27,8 @@ public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements
     public static class Create extends TaxableChangeEventImpl.Create implements MemberRankChangeEvent.Create {
         private MemberRank memberRank;
 
-        public Create(Cause cause, Society society, MemberRank memberRank) {
-            super(cause, society, memberRank);
+        public Create(Cause cause, MemberRank memberRank) {
+            super(cause, memberRank);
             this.memberRank = memberRank;
         }
 
@@ -42,8 +41,8 @@ public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements
     public static class Destroy extends TaxableChangeEventImpl.Destroy implements MemberRankChangeEvent.Destroy {
         private MemberRank memberRank;
 
-        public Destroy(Cause cause, Society society, MemberRank memberRank) {
-            super(cause, society, memberRank);
+        public Destroy(Cause cause, MemberRank memberRank) {
+            super(cause, memberRank);
             this.memberRank = memberRank;
         }
 
@@ -56,8 +55,8 @@ public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements
     public static class ChangeParent extends MemberRankChangeEventImpl implements MemberRankChangeEvent.ChangeParent {
         private MemberRank newParent;
 
-        public ChangeParent(Cause cause, Society society, MemberRank memberRank, MemberRank newParent) {
-            super(cause, society, memberRank);
+        public ChangeParent(Cause cause, MemberRank memberRank, MemberRank newParent) {
+            super(cause, memberRank);
             this.newParent = newParent;
         }
 
@@ -70,8 +69,8 @@ public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements
     public static class ChangeTitle extends MemberRankChangeEventImpl implements MemberRankChangeEvent.ChangeTitle {
         private Text newTitle;
 
-        public ChangeTitle(Cause cause, Society society, MemberRank memberRank, Text newTitle) {
-            super(cause, society, memberRank);
+        public ChangeTitle(Cause cause, MemberRank memberRank, Text newTitle) {
+            super(cause, memberRank);
             this.newTitle = newTitle;
         }
 
@@ -84,8 +83,8 @@ public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements
     public static class ChangeDescription extends MemberRankChangeEventImpl implements MemberRankChangeEvent.ChangeDescription {
         private Text newDescription;
 
-        public ChangeDescription(Cause cause, Society society, MemberRank memberRank, Text newDescription) {
-            super(cause, society, memberRank);
+        public ChangeDescription(Cause cause, MemberRank memberRank, Text newDescription) {
+            super(cause, memberRank);
             this.newDescription = newDescription;
         }
 
@@ -99,8 +98,8 @@ public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements
         private MemberPermission changedPermission;
         private PermissionState newValue;
 
-        public ChangePermission(Cause cause, Society society, MemberRank memberRank, MemberPermission changedPermission, PermissionState newValue) {
-            super(cause, society, memberRank);
+        public ChangePermission(Cause cause, MemberRank memberRank, MemberPermission changedPermission, PermissionState newValue) {
+            super(cause, memberRank);
             this.changedPermission = changedPermission;
             this.newValue = newValue;
         }
@@ -121,8 +120,8 @@ public class MemberRankChangeEventImpl extends SocietyChangeEventImpl implements
         private ClaimPermission changedPermission;
         private PermissionState newValue;
 
-        public ChangeClaimPermission(Cause cause, Society society, MemberRank memberRank, Claim claim, ClaimPermission changedPermission, PermissionState newValue) {
-            super(cause, society, memberRank);
+        public ChangeClaimPermission(Cause cause, MemberRank memberRank, Claim claim, ClaimPermission changedPermission, PermissionState newValue) {
+            super(cause, memberRank);
             this.claim = claim;
             this.changedPermission = changedPermission;
             this.newValue = newValue;

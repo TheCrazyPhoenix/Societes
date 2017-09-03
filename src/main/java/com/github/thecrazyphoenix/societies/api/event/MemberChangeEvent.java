@@ -12,7 +12,7 @@ import org.spongepowered.api.text.Text;
  *
  * @see TaxableChangeEvent
  */
-public interface MemberChangeEvent extends SocietyChangeEvent {
+public interface MemberChangeEvent extends TaxableChangeEvent {
     /**
      * Retrieves the member modified by this event.
      * This object represents the member before its modified state, except for the {@link Create} event.

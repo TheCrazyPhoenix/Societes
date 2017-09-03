@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 /**
  * Base event for when a taxable's properties change.
  */
-public interface TaxableChangeEvent extends SocietyChangeEvent {
+public interface TaxableChangeEvent extends SocietyElementChangeEvent {
     /**
      * Retrieves the taxable affected by this event.
      * This represents the old state of the taxable, except for the {@link Create} event.
@@ -19,12 +19,12 @@ public interface TaxableChangeEvent extends SocietyChangeEvent {
      * Called when a taxable is created.
      * @see MemberChangeEvent.Create
      */
-    interface Create extends TaxableChangeEvent {}
+    interface Create extends TaxableChangeEvent, SocietyElementChangeEvent.Create {}
 
     /**
      * Called when a taxable is destroyed.
      */
-    interface Destroy extends TaxableChangeEvent {}
+    interface Destroy extends TaxableChangeEvent, SocietyElementChangeEvent.Destroy {}
 
     /**
      * Called when a taxable's fixed tax changes.

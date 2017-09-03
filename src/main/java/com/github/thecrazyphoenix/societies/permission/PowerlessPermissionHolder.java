@@ -21,4 +21,9 @@ public class PowerlessPermissionHolder<T extends Enum<T>> implements PermissionH
     public boolean setPermission(T permission, PermissionState newState, Cause cause) {
         return false;
     }
+
+    @Override
+    public PermissionState getPermission(T permission) {
+        return PermissionState.FALSE;
+    }
 }

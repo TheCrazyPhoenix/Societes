@@ -32,7 +32,7 @@ public abstract class AbstractTaxable<T extends Enum<T>> extends PermissionHolde
 
     @Override
     public boolean setFixedTax(BigDecimal newTax, Cause cause) {
-        if (!societies.queueEvent(new TaxableChangeEventImpl.ChangeFixedTax(cause, society, this, newTax))) {
+        if (!societies.queueEvent(new TaxableChangeEventImpl.ChangeFixedTax(cause, this, newTax))) {
             fixedTax = newTax;
             return true;
         }
@@ -41,7 +41,7 @@ public abstract class AbstractTaxable<T extends Enum<T>> extends PermissionHolde
 
     @Override
     public boolean setSalary(BigDecimal newSalary, Cause cause) {
-        if (!societies.queueEvent(new TaxableChangeEventImpl.ChangeSalary(cause, society, this, newSalary))) {
+        if (!societies.queueEvent(new TaxableChangeEventImpl.ChangeSalary(cause, this, newSalary))) {
             salary = newSalary;
             return true;
         }

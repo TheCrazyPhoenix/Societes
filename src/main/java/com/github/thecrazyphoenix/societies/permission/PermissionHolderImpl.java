@@ -7,7 +7,6 @@ import com.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.event.PermissionChangeEventImpl;
 import com.github.thecrazyphoenix.societies.society.SocietyElementImpl;
-import ninja.leaping.configurate.ConfigurationNode;
 import org.spongepowered.api.event.cause.Cause;
 
 import java.util.Map;
@@ -35,7 +34,12 @@ public class PermissionHolderImpl<T extends Enum<T>> extends SocietyElementImpl 
 
     @Override
     public boolean setPermission(T permission, PermissionState newState, Cause cause) {
-        return setPermission(permission, newState, new PermissionChangeEventImpl(cause, society, permission, newState));
+        return setPermission(permission, newState, new PermissionChangeEventImpl(cause, this, permission, newState));
+    }
+
+    @Override
+    public PermissionState getPermission(T permission) {
+        return permissions.getOrDefault(permission, PermissionState.NONE);
     }
 
     protected boolean setPermission(T permission, PermissionState newState, PermissionChangeEvent event) {

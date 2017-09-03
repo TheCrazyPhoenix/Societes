@@ -10,7 +10,7 @@ import java.util.Optional;
 /**
  * Base event for when a member rank's title, description or permissions change.
  */
-public interface MemberRankChangeEvent extends SocietyChangeEvent {
+public interface MemberRankChangeEvent extends TaxableChangeEvent {
     /**
      * Retrieves the member rank affected by this event.
      * This will always represent the old state of the member rank, except for the {@link Create} event.

@@ -12,11 +12,11 @@ import com.github.thecrazyphoenix.societies.api.society.MemberRank;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
-public class MemberChangeEventImpl extends SocietyChangeEventImpl implements MemberChangeEvent {
+public class MemberChangeEventImpl extends TaxableChangeEventImpl implements MemberChangeEvent {
     private Member member;
 
-    public MemberChangeEventImpl(Cause cause, Society society, Member member) {
-        super(cause, society);
+    public MemberChangeEventImpl(Cause cause, Member member) {
+        super(cause, member);
         this.member = member;
     }
 
@@ -28,8 +28,8 @@ public class MemberChangeEventImpl extends SocietyChangeEventImpl implements Mem
     public static class Create extends TaxableChangeEventImpl.Create implements MemberChangeEvent.Create {
         private Member member;
 
-        public Create(Cause cause, Society society, Member member) {
-            super(cause, society, member);
+        public Create(Cause cause, Member member) {
+            super(cause, member);
             this.member = member;
         }
 
@@ -42,8 +42,8 @@ public class MemberChangeEventImpl extends SocietyChangeEventImpl implements Mem
     public static class Destroy extends TaxableChangeEventImpl.Destroy implements MemberChangeEvent.Destroy {
         private Member member;
 
-        public Destroy(Cause cause, Society society, Member member) {
-            super(cause, society, member);
+        public Destroy(Cause cause, Member member) {
+            super(cause, member);
             this.member = member;
         }
 
@@ -56,8 +56,8 @@ public class MemberChangeEventImpl extends SocietyChangeEventImpl implements Mem
     public static class ChangeRank extends MemberChangeEventImpl implements MemberChangeEvent.ChangeRank {
         private MemberRank newRank;
 
-        public ChangeRank(Cause cause, Society society, Member member, MemberRank newRank) {
-            super(cause, society, member);
+        public ChangeRank(Cause cause, Member member, MemberRank newRank) {
+            super(cause, member);
             this.newRank = newRank;
         }
 
@@ -70,8 +70,8 @@ public class MemberChangeEventImpl extends SocietyChangeEventImpl implements Mem
     public static class ChangeTitle extends MemberChangeEventImpl implements MemberChangeEvent.ChangeTitle {
         private Text newTitle;
 
-        public ChangeTitle(Cause cause, Society society, Member member, Text newTitle) {
-            super(cause, society, member);
+        public ChangeTitle(Cause cause, Member member, Text newTitle) {
+            super(cause, member);
             this.newTitle = newTitle;
         }
 
@@ -85,8 +85,8 @@ public class MemberChangeEventImpl extends SocietyChangeEventImpl implements Mem
         private MemberPermission changedPermission;
         private PermissionState newValue;
 
-        public ChangePermission(Cause cause, Society society, Member member, MemberPermission changedPermission, PermissionState newValue) {
-            super(cause, society, member);
+        public ChangePermission(Cause cause, Member member, MemberPermission changedPermission, PermissionState newValue) {
+            super(cause, member);
             this.changedPermission = changedPermission;
             this.newValue = newValue;
         }
@@ -108,8 +108,8 @@ public class MemberChangeEventImpl extends SocietyChangeEventImpl implements Mem
         private ClaimPermission changedPermission;
         private PermissionState newValue;
 
-        public ChangeClaimPermission(Cause cause, Society society, Member member, Claim claim, MemberClaim memberClaim, ClaimPermission changedPermission, PermissionState newValue) {
-            super(cause, society, member);
+        public ChangeClaimPermission(Cause cause, Member member, Claim claim, MemberClaim memberClaim, ClaimPermission changedPermission, PermissionState newValue) {
+            super(cause, member);
             this.claim = claim;
             this.memberClaim = memberClaim;
             this.changedPermission = changedPermission;

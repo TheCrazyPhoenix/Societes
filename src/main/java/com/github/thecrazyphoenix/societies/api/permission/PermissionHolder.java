@@ -2,6 +2,10 @@ package com.github.thecrazyphoenix.societies.api.permission;
 
 import org.spongepowered.api.event.cause.Cause;
 
+/**
+ * Models an object that can have permissions.
+ * @param <T> The type of permissions the object can have.
+ */
 public interface PermissionHolder<T extends Enum<T>> {
     /**
      * Checks if the given permission is granted for this object.
@@ -19,4 +23,12 @@ public interface PermissionHolder<T extends Enum<T>> {
      * @return True if the modification took place, false otherwise.
      */
     boolean setPermission(T permission, PermissionState newState, Cause cause);
+
+    /**
+     * Retrieves a permission for this object.
+     * This method should only be used for storing this object.
+     * @param permission The permission value to use.
+     * @return The permission state this container stores.
+     */
+    PermissionState getPermission(T permission);
 }

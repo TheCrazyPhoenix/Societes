@@ -16,6 +16,7 @@ import com.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,22 +27,30 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
     private PermissionHolder<ClaimPermission> defaultPermissions;
     private Map<MemberRank, PermissionHolder<ClaimPermission>> memberRankPermissions;
     private Map<SubSociety, PermissionHolder<ClaimPermission>> subSocietyPermissions;
+    private Map<MemberRank, PermissionHolder<ClaimPermission>> viewMemberRankPermissions;
+    private Map<SubSociety, PermissionHolder<ClaimPermission>> viewSubSocietyPermissions;
 
     private Set<Cuboid> cuboids;
     private Set<MemberClaim> memberClaims;
     private BigDecimal landTax;
     private BigDecimal landValue;
 
-    public ClaimImpl(Societies societies, Society society, PermissionHolder<ClaimPermission> defaultPermissions) {
+    public ClaimImpl(Societies societies, Society society, PermissionHolder<ClaimPermission> defaultPermissions, Cause cause) {
         super(societies, society);
         this.defaultPermissions = defaultPermissions;
         memberRankPermissions = new HashMap<>();
         subSocietyPermissions = new HashMap<>();
+        viewMemberRankPermissions = Collections.unmodifiableMap(memberRankPermissions);
+        viewSubSocietyPermissions = Collections.unmodifiableMap(subSocietyPermissions);
         cuboids = new HashSet<>();
         memberClaims = new HashSet<>();
         landTax = BigDecimal.ZERO;
         landValue = BigDecimal.ZERO;
-        society.getClaims().add(this);
+        if (!societies.queueEvent(new ClaimChangeEventImpl.Create(cause, this))) {
+            society.getClaims().add(this);
+        } else {
+            throw new UnsupportedOperationException("create event cancelled");
+        }
     }
 
     @Override
@@ -65,6 +74,11 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
     }
 
     @Override
+    public Map<MemberRank, PermissionHolder<ClaimPermission>> getMemberRankPermissions() {
+        return viewMemberRankPermissions;
+    }
+
+    @Override
     public Optional<PermissionHolder<ClaimPermission>> getPermissions(SubSociety subSociety) {
         return Optional.ofNullable(subSocietyPermissions.get(subSociety));
     }
@@ -72,6 +86,11 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
     @Override
     public void setPermissions(SubSociety subSociety, PermissionHolder<ClaimPermission> permissions) {
         subSocietyPermissions.put(subSociety, permissions);
+    }
+
+    @Override
+    public Map<SubSociety, PermissionHolder<ClaimPermission>> getSubSocietyPermissions() {
+        return viewSubSocietyPermissions;
     }
 
     @Override
@@ -86,7 +105,7 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
 
     @Override
     public boolean setLandTax(BigDecimal value, Cause cause) {
-        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandTax(cause, society, this, value))) {
+        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandTax(cause, this, value))) {
             landTax = value;
             return true;
         }
@@ -100,7 +119,7 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
 
     @Override
     public boolean setLandValue(BigDecimal value, Cause cause) {
-        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandValue(cause, society, this, value))) {
+        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandValue(cause, this, value))) {
             landValue = value;
             return true;
         }

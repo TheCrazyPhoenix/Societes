@@ -8,7 +8,7 @@ public class SocietyElementImpl implements SocietyElement {
     protected Societies societies;
     protected Society society;
 
-    public SocietyElementImpl(Societies societies, Society society) {
+    protected SocietyElementImpl(Societies societies, Society society) {
         this.societies = societies;
         this.society = society;
     }

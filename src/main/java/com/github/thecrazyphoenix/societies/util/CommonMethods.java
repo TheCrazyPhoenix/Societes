@@ -14,7 +14,7 @@ public class CommonMethods {
     }
 
     public static String nameToID(Text name) {
-        return NAME_TO_ID_PATTERN.matcher(name.toPlain()).replaceAll("_");
+        return NAME_TO_ID_PATTERN.matcher(name.toPlain()).replaceAll("_");      // Slightly faster than String#replaceAll in the long run.
     }
 
     public static long getVolume(Vector3i c1, Vector3i c2) {

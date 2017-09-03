@@ -1,10 +1,13 @@
 package com.github.thecrazyphoenix.societies.society;
 
 import com.github.thecrazyphoenix.societies.Societies;
+import com.github.thecrazyphoenix.societies.api.event.SubSocietyChangeEvent;
 import com.github.thecrazyphoenix.societies.api.permission.SocietyPermission;
 import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.api.society.SubSociety;
+import com.github.thecrazyphoenix.societies.event.SubSocietyChangeEventImpl;
 import com.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
 
 import java.util.HashSet;
@@ -17,10 +20,14 @@ public class SubSocietyImpl extends AbstractTaxable<SocietyPermission> implement
     private Society society;
     private String societyID;
 
-    public SubSocietyImpl(Societies societies, Society owner, Society subSociety) {
+    public SubSocietyImpl(Societies societies, Society owner, Society subSociety, Cause cause) {
         super(societies, owner, new DefaultTaxable<>(societies, owner), PowerlessPermissionHolder.SOCIETY);
         society = subSociety;
-        owner.getSubSocieties().put(societyID = subSociety.getAccount().getIdentifier(), this);
+        if (societies.queueEvent(new SubSocietyChangeEventImpl.Create(cause, this))) {
+            owner.getSubSocieties().put(societyID = subSociety.getAccount().getIdentifier(), this);
+        } else {
+            throw new UnsupportedOperationException("create event cancelled");
+        }
     }
 
     public SubSocietyImpl(Societies societies, Society owner, String subSocietyID) {

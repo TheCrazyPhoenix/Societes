@@ -8,7 +8,6 @@ import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.event.MemberChangeEventImpl;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
 
@@ -17,11 +16,15 @@ public class MemberImpl extends AbstractTaxable<MemberPermission> implements Mem
     private MemberRank rank;
     private Text title;
 
-    public MemberImpl(Societies societies, Society society, User user, MemberRank rank) {
+    public MemberImpl(Societies societies, Society society, User user, MemberRank rank, Cause cause) {
         super(societies, society, rank, rank);
         this.user = user;
         this.rank = rank;
-        society.getMembers().add(this);
+        if (!societies.queueEvent(new MemberChangeEventImpl.Create(cause, this))) {
+            society.getMembers().put(user.getUniqueId(), this);
+        } else {
+            throw new UnsupportedOperationException("create event cancelled");
+        }
     }
 
     @Override
@@ -41,7 +44,7 @@ public class MemberImpl extends AbstractTaxable<MemberPermission> implements Mem
 
     @Override
     public boolean setTitle(Text newTitle, Cause cause) {
-        if (!societies.queueEvent(new MemberChangeEventImpl.ChangeTitle(cause, society, this, newTitle))) {
+        if (!societies.queueEvent(new MemberChangeEventImpl.ChangeTitle(cause, this, newTitle))) {
             title = newTitle;
             return true;
         }

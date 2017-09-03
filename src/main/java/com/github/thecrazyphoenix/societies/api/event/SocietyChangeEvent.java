@@ -12,7 +12,7 @@ public interface SocietyChangeEvent extends Event, Cancellable {
     /**
      * Retrieves the modified society.
      * This is the society or sub-society which is most concerned by this event.
-     * This object represents the old state for all events except {@link SocietyChangeEvent.Create}
+     * This object represents the old state for all events except {@link Create}.
      * @return The society affected by this event.
      */
     Society getSociety();

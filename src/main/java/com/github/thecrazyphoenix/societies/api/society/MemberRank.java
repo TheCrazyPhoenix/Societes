@@ -15,6 +15,12 @@ import java.util.Optional;
  */
 public interface MemberRank extends Taxable, PermissionHolder<MemberPermission> {
     /**
+     * Retrieves the unique identifier of this member rank.
+     * @return The identifier as a string.
+     */
+    String getIdentifier();
+
+    /**
      * Retrieves the parent rank of this rank.
      * If there is no parent, then this is the society's leaders' rank.
      * @return The parent if it exists, otherwise {@link Optional#empty()}.

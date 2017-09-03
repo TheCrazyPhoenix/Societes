@@ -8,6 +8,7 @@ import com.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.transaction.TransactionResult;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -48,6 +49,12 @@ public interface MemberClaim extends SocietyElement, Cuboid {
      * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, otherwise {@link Optional#empty()}.
      */
     Optional<PermissionHolder<ClaimPermission>> getPermissions(Member member);
+
+    /**
+     * Retrieves all the permissions associated with members.
+     * @return The permissions as an unmodifiable member-indexed map of permission holders of claim permissions.
+     */
+    Map<Member, PermissionHolder<ClaimPermission>> getMemberPermissions();
 
     /**
      * Sets the given member's permissions.

@@ -8,6 +8,7 @@ import com.github.thecrazyphoenix.societies.api.society.SubSociety;
 import org.spongepowered.api.event.cause.Cause;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -18,7 +19,7 @@ public interface Claim extends SocietyElement, ClaimedLand {
     /**
      * Retrieves the cuboids that make up this claim.
      * The cuboids may overlap.
-     * @return The cuboids as a mutable set.
+     * @return The cuboids as an unmodifiable set.
      */
     Set<Cuboid> getClaimCuboids();
 
@@ -44,6 +45,12 @@ public interface Claim extends SocietyElement, ClaimedLand {
     void setPermissions(MemberRank rank, PermissionHolder<ClaimPermission> permissions);
 
     /**
+     * Retrieves all the permissions associated with member ranks.
+     * @return The permissions as an unmodifiable member rank-indexed map of permission holders of claim permissions.
+     */
+    Map<MemberRank, PermissionHolder<ClaimPermission>> getMemberRankPermissions();
+
+    /**
      * Retrieves the permissions of a given sub-society.
      * @param subSociety The society whose permissions to retrieve.
      * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, otherwise {@link Optional#empty()}.
@@ -57,6 +64,12 @@ public interface Claim extends SocietyElement, ClaimedLand {
      * @param permissions The object holding those permissions. If null, the sub-society will use the default permissions.
      */
     void setPermissions(SubSociety subSociety, PermissionHolder<ClaimPermission> permissions);
+
+    /**
+     * Retrieves all the permissions associated with sub-societies.
+     * @return The permissions as an unmodifiable sub-society-indexed map of permission holders of claim permissions.
+     */
+    Map<SubSociety, PermissionHolder<ClaimPermission>> getSubSocietyPermissions();
 
     /**
      * Retrieves all the member claims this claim contains.

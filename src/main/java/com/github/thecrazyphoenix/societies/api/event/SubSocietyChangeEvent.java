@@ -2,7 +2,7 @@ package com.github.thecrazyphoenix.societies.api.event;
 
 import com.github.thecrazyphoenix.societies.api.society.SubSociety;
 
-public interface SubSocietyChangeEvent extends SocietyChangeEvent {
+public interface SubSocietyChangeEvent extends TaxableChangeEvent {
     /**
      * Retrieves the sub-society affected by this event.
      * This represents the old state of the sub-society, except for the Create event.

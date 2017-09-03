@@ -18,19 +18,19 @@ public interface Member extends Taxable, PermissionHolder<MemberPermission> {
     User getUser();
 
     /**
-     * Retrieves the rank of this Member.
+     * Retrieves the rank of this member.
      * @return This Member's rank.
      */
     MemberRank getRank();
 
     /**
-     * Retrieves the default title for this rank.
+     * Retrieves the default title for this member.
      * @return The title, as a Text object.
      */
     Text getTitle();
 
     /**
-     * Sets the default title for this rank.
+     * Sets the default title for this member.
      * @param newTitle The new title, as a Text object.
      * @param cause The cause of this modification.
      * @return True if the modification took place, false otherwise.

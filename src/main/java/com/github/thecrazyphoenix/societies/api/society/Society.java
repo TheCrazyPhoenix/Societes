@@ -3,9 +3,11 @@ package com.github.thecrazyphoenix.societies.api.society;
 import com.github.thecrazyphoenix.societies.api.land.Claim;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.World;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Models a society.
@@ -33,15 +35,15 @@ public interface Society {
 
     /**
      * Retrieves the leaders of this society.
-     * @return The leaders as a set of members.
+     * @return The leaders as a UUID-indexed map of members.
      */
-    Set<Member> getLeaders();
+    Map<UUID, Member> getLeaders();
 
     /**
      * Retrieves the members of this society. This includes the leaders.
-     * @return The members as a set.
+     * @return The members as a UUID-indexed map.
      */
-    Set<Member> getMembers();
+    Map<UUID, Member> getMembers();
 
     /**
      * Retrieves the claims owned by this society.

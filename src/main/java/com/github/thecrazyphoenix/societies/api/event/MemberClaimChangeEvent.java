@@ -17,13 +17,13 @@ public interface MemberClaimChangeEvent extends ClaimChangeEvent {
     /**
      * Called when a member claim is created.
      */
-    interface Create extends MemberClaimChangeEvent {}
+    interface Create extends MemberClaimChangeEvent, SocietyElementChangeEvent.Create {}
 
     /**
      * Called when a member claim is destroyed.
      * Member claims should not be destroyable unless the owner is inactive or nobody owns it.
      */
-    interface Destroy extends MemberClaimChangeEvent {}
+    interface Destroy extends MemberClaimChangeEvent, SocietyElementChangeEvent.Destroy {}
 
     /**
      * Called when a member claim changes owner.

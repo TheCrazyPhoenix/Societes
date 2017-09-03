@@ -2,6 +2,7 @@ package com.github.thecrazyphoenix.societies;
 
 import com.github.thecrazyphoenix.societies.api.SocietiesService;
 import com.github.thecrazyphoenix.societies.api.event.SocietyChangeEvent;
+import com.github.thecrazyphoenix.societies.api.society.Member;
 import com.github.thecrazyphoenix.societies.api.society.Society;
 import com.github.thecrazyphoenix.societies.config.ConfigurationPopulator;
 import com.github.thecrazyphoenix.societies.config.SocietySerializer;
@@ -13,13 +14,18 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.filter.Getter;
+import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.service.ChangeServiceProviderEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.scheduler.AsynchronousExecutor;
+import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.service.economy.EconomyService;
 import org.spongepowered.api.text.Text;
@@ -42,13 +48,17 @@ public class Societies {
     private Game game;
     @Inject
     private Logger logger;
-    private EconomyService economy;
+    @Inject
+    @AsynchronousExecutor
+    private SpongeExecutorService executor;
+    private SocietiesService societiesService;
+    private EconomyService economyService;
 
     private ConfigurationLoader<CommentedConfigurationNode> pluginDataLoader;
-    private ConfigurationLoader<CommentedConfigurationNode> societiesDataLoader;    // TODO Actively store societies as they change
+    private ConfigurationLoader<CommentedConfigurationNode> societiesDataLoader;
     private SocietySerializer societySerializer;
 
-    private Map<String, Society> societies;
+    private Map<String, Society> societies;     // TODO Add support for multiple worlds
     private Map<String, Society> allSocieties;
     private boolean continueAfterFailure;
 
@@ -81,8 +91,13 @@ public class Societies {
     }
 
     @Listener
-    public void onChangeServiceProvider(ChangeServiceProviderEvent event, @Getter("getNewProvider") EconomyService economy) {
-        this.economy = economy;
+    public void onChangeServiceProvider(ChangeServiceProviderEvent event, @Getter("getNewProvider") EconomyService economyService) {
+        this.economyService = economyService;
+    }
+
+    @Listener
+    public void onChangeServiceProvider(ChangeServiceProviderEvent event, @Getter("getNewProvider") SocietiesService societiesService) {
+        this.societiesService = societiesService;
     }
 
     public void onFailure(String log, final Exception e) {
@@ -100,12 +115,30 @@ public class Societies {
         }
     }
 
+    public void onSocietyModified() {
+        executor.submit(this::saveSocieties);
+    }
+
     public boolean queueEvent(SocietyChangeEvent event) {
         return !queueEvents || game.getEventManager().post(event);
     }
 
+    public SocietiesService getSocietiesService() {
+        return societiesService;
+    }
+
     public EconomyService getEconomyService() {
-        return economy;
+        return economyService;
+    }
+
+    private void saveSocieties() {
+        ConfigurationNode node = societiesDataLoader.createEmptyNode();
+        societySerializer.serializeSocieties(node, societies, allSocieties);
+        try {
+            societiesDataLoader.save(node);
+        } catch (IOException e) {
+            logger.error("Failed to save societies", e);
+        }
     }
 
     @Inject

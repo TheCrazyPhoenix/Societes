@@ -1,13 +1,14 @@
 package com.github.thecrazyphoenix.societies.api.event;
 
 import com.github.thecrazyphoenix.societies.api.land.Claim;
+import com.github.thecrazyphoenix.societies.api.society.SocietyElement;
 
 import java.math.BigDecimal;
 
 /**
  * Base event for when information related to a claim changes (new, destroy, rezone, member claims)
  */
-public interface ClaimChangeEvent extends SocietyChangeEvent {
+public interface ClaimChangeEvent extends SocietyElementChangeEvent {
     /**
      * Retrieves the claim affected by this event.
      * This object will represent the old state except for the {@link Create} event.
@@ -18,12 +19,12 @@ public interface ClaimChangeEvent extends SocietyChangeEvent {
     /**
      * Called when a claim is created.
      */
-    interface Create extends ClaimChangeEvent {}
+    interface Create extends ClaimChangeEvent, SocietyElementChangeEvent.Create {}
 
     /**
      * Called when a claim is destroyed (i.e. removed or entirely stolen)
      */
-    interface Destroy extends ClaimChangeEvent {}
+    interface Destroy extends ClaimChangeEvent, SocietyElementChangeEvent.Destroy {}
 
     /**
      * Called when a claim changes in volume (i.e. modified size or partially stolen).
