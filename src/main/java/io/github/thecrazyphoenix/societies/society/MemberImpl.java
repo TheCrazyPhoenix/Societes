@@ -6,6 +6,7 @@ import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.event.MemberChangeEventImpl;
+import io.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
@@ -23,23 +24,28 @@ public class MemberImpl extends AbstractTaxable<MemberPermission> implements Mem
     private UUID uuid;
     private MemberRank rank;
     private Text title;
+    private boolean leader;
 
-    public MemberImpl(Societies societies, Society society, User user, MemberRank rank, Cause cause) {
-        this(cause, societies, society, user.getUniqueId(), rank);
+    public MemberImpl(Societies societies, Society society, User user, MemberRank rank, boolean leader, Cause cause) {
+        this(cause, societies, society, user.getUniqueId(), rank, leader);
         this.user = user;
     }
 
-    public MemberImpl(Societies societies, Society society, UUID uuid, MemberRank rank, Cause cause) {
-        this(cause, societies, society, uuid, rank);
+    public MemberImpl(Societies societies, Society society, UUID uuid, MemberRank rank, boolean leader, Cause cause) {
+        this(cause, societies, society, uuid, rank, leader);
         this.uuid = uuid;
         NEEDS_UPDATE.add(this);
     }
 
-    private MemberImpl(Cause cause, Societies societies, Society society, UUID uuid, MemberRank rank) {
-        super(societies, society, rank, rank);
+    private MemberImpl(Cause cause, Societies societies, Society society, UUID uuid, MemberRank rank, boolean leader) {
+        super(societies, society, rank, leader ? AbsolutePermissionHolder.MEMBER : rank);
         this.rank = rank;
+        this.leader = leader;
         if (!societies.queueEvent(new MemberChangeEventImpl.Create(cause, this))) {
             society.getMembers().put(uuid, this);
+            if (leader) {
+                society.getLeaders().put(uuid, this);
+            }
         } else {
             throw new UnsupportedOperationException("create event cancelled");
         }
@@ -74,6 +80,11 @@ public class MemberImpl extends AbstractTaxable<MemberPermission> implements Mem
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean isLeader() {
+        return leader;
     }
 
     @Override

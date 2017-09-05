@@ -9,6 +9,7 @@ import io.github.thecrazyphoenix.societies.event.PermissionChangeEventImpl;
 import io.github.thecrazyphoenix.societies.society.SocietyElementImpl;
 import org.spongepowered.api.event.cause.Cause;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class PermissionHolderImpl<T extends Enum<T>> extends SocietyElementImpl implements PermissionHolder<T> {
@@ -17,6 +18,8 @@ public class PermissionHolderImpl<T extends Enum<T>> extends SocietyElementImpl 
 
     public PermissionHolderImpl(Societies societies, Society society, PermissionHolder<T> parent) {
         super(societies, society);
+        this.parent = parent;
+        permissions = new HashMap<>();
     }
 
     @Override

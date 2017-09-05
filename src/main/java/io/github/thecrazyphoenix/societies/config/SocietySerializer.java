@@ -247,21 +247,23 @@ public class SocietySerializer {
     private void deserializeMember(Society society, ConfigurationNode node) {
         Member member = null;
         try {
+            boolean leader = node.getNode(LEADER_KEY).getBoolean();
             UUID uuid = node.getNode(UUID_KEY).getValue(UUID_TOKEN);
-            member = new MemberImpl(societies, society, uuid, society.getRanks().get(node.getNode(RANK_KEY).getString()), null);
+            member = new MemberImpl(societies, society, uuid, society.getRanks().get(node.getNode(RANK_KEY).getString()), leader, null);
             Text buffer = node.getNode(TITLE_KEY).getValue(TEXT_TOKEN);
             if (buffer != null) {
                 member.setTitle(buffer, null);
             }
             deserializeTaxable(member, node);
             deserializePermissions(member, node.getNode(PERMISSIONS_KEY), MemberPermission::valueOf);
-            if (node.getNode(LEADER_KEY).getBoolean()) {
+            if (leader) {
                 society.getLeaders().put(uuid, member);
             }
         } catch (ObjectMappingException e) {
             logger.warn("Failed to deserialize member", e);
             if (member != null) {
                 society.getMembers().remove(member.getUser().getUniqueId());
+                society.getLeaders().remove(member.getUser().getUniqueId());
             }
         }
     }

@@ -36,4 +36,11 @@ public interface Member extends Taxable, PermissionHolder<MemberPermission> {
      * @return True if the modification took place, false otherwise.
      */
     boolean setTitle(Text newTitle, Cause cause);
+
+    /**
+     * Checks whether or not this member is a leader of the society.
+     * Leaders have all permissions in every context except member claims.
+     * @return True if they are a leader, false otherwise.
+     */
+    boolean isLeader();
 }

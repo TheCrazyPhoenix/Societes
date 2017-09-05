@@ -13,6 +13,7 @@ import io.github.thecrazyphoenix.societies.api.society.SubSociety;
 import io.github.thecrazyphoenix.societies.event.ClaimChangeEventImpl;
 import io.github.thecrazyphoenix.societies.society.SocietyElementImpl;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.api.event.cause.Cause;
 
 import java.math.BigDecimal;

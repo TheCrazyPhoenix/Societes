@@ -16,6 +16,11 @@ public enum ClaimPermission {
     INTERACT,
 
     /**
+     * Allows the subject to damage non-player entities.
+     */
+    DAMAGE,
+
+    /**
      * Allows the subject to place and break blocks, and modify tile-entities.
      */
     BUILD
