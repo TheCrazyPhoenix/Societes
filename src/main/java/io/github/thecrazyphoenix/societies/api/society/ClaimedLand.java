@@ -1,4 +1,4 @@
-package io.github.thecrazyphoenix.societies.api.land;
+package io.github.thecrazyphoenix.societies.api.society;
 
 import com.flowpowered.math.vector.Vector3i;
 

@@ -1,8 +1,8 @@
 package io.github.thecrazyphoenix.societies.listener;
 
 import io.github.thecrazyphoenix.societies.Societies;
-import io.github.thecrazyphoenix.societies.api.land.Claim;
-import io.github.thecrazyphoenix.societies.api.land.MemberClaim;
+import io.github.thecrazyphoenix.societies.api.society.Claim;
+import io.github.thecrazyphoenix.societies.api.society.MemberClaim;
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.society.Member;
@@ -106,7 +106,7 @@ public class WorldProtectionListener {
                 return;
             }
             Optional<MemberClaim> memberClaim = claim.getMemberClaims().stream().filter(c -> c.isClaimed(location.getBlockPosition())).findAny();
-            if ((memberClaim.isPresent() && !memberClaim.get().getPermissions(member).map(hasPermission).orElse(false)) || !memberClaim.isPresent() && !member.isLeader() && !claim.getPermissions(member.getRank()).map(ph -> ph.hasPermission(ClaimPermission.BUILD)).orElse(false)) {
+            if ((memberClaim.isPresent() && !memberClaim.get().getPermissions(member).map(hasPermission).orElse(false)) || !memberClaim.isPresent() && !claim.getPermissions(member.getRank()).map(ph -> ph.hasPermission(ClaimPermission.BUILD)).orElse(false)) {
                 cancel.run();
             }
         }

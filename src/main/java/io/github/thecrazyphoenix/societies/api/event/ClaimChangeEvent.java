@@ -1,6 +1,6 @@
 package io.github.thecrazyphoenix.societies.api.event;
 
-import io.github.thecrazyphoenix.societies.api.land.Claim;
+import io.github.thecrazyphoenix.societies.api.society.Claim;
 
 import java.math.BigDecimal;
 

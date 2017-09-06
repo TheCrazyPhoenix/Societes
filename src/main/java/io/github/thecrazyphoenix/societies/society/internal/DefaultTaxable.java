@@ -1,15 +1,15 @@
-package io.github.thecrazyphoenix.societies.society;
+package io.github.thecrazyphoenix.societies.society.internal;
 
 import io.github.thecrazyphoenix.societies.Societies;
-import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.api.society.Taxable;
+import io.github.thecrazyphoenix.societies.society.SocietyImpl;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
 
 import java.math.BigDecimal;
 
 public class DefaultTaxable<T extends Enum<T>> extends SocietyElementImpl implements Taxable {
-    public DefaultTaxable(Societies societies, Society society) {
+    public DefaultTaxable(Societies societies, SocietyImpl society) {
         super(societies, society);
     }
 

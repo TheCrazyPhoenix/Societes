@@ -1,40 +1,44 @@
 package io.github.thecrazyphoenix.societies.society;
 
 import io.github.thecrazyphoenix.societies.Societies;
+import io.github.thecrazyphoenix.societies.api.event.PermissionChangeEvent;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
+import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
+import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
-import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.event.MemberRankChangeEventImpl;
+import io.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
+import io.github.thecrazyphoenix.societies.society.internal.AbstractTaxable;
+import io.github.thecrazyphoenix.societies.society.internal.DefaultTaxable;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public class MemberRankImpl extends AbstractTaxable<MemberPermission> implements MemberRank {
+    private MemberRankImpl parent;
     private String id;
-    private MemberRank parent;
     private Text title;
     private Text description;
 
-    public MemberRankImpl(Societies societies, Society society, MemberRank parent, Text title, Cause cause) {
-        super(societies, society, new DefaultTaxable<>(societies, society), PowerlessPermissionHolder.MEMBER);
-        this.parent = parent;
-        this.title = title;
-        description = Text.EMPTY;
-        if (society.getRanks().containsKey(id = CommonMethods.nameToID(title))) {
-            throw new IllegalArgumentException("title must be unique");
-        } else if (!societies.queueEvent(new MemberRankChangeEventImpl.Create(cause, this))) {
-            society.getRanks().put(id, this);
-        } else {
-            throw new UnsupportedOperationException("create event cancelled");
-        }
-    }
+    private Map<String, MemberRank> children;
+    private Map<UUID, Member> members;
+    private Map<String, MemberRank> viewChildren;
+    private Map<UUID, Member> viewMembers;
 
-    @Override
-    public String getIdentifier() {
-        return id;
+    private MemberRankImpl(Builder builder) {
+        super(builder);
+        parent = builder.parent;
+        id = CommonMethods.nameToID(title = builder.title);
+        description = builder.description;
+        viewChildren = Collections.unmodifiableMap(children = new HashMap<>());
+        viewMembers = Collections.unmodifiableMap(members = new HashMap<>());
     }
 
     @Override
@@ -43,13 +47,18 @@ public class MemberRankImpl extends AbstractTaxable<MemberPermission> implements
     }
 
     @Override
-    public boolean setParent(MemberRank newParent, Cause cause) {
-        if (!societies.queueEvent(new MemberRankChangeEventImpl.ChangeParent(cause, this, newParent))) {
-            parent = newParent;
-            societies.onSocietyModified();
-            return true;
-        }
-        return false;
+    public Map<String, MemberRank> getChildren() {
+        return viewChildren;
+    }
+
+    @Override
+    public Map<UUID, Member> getMembers() {
+        return viewMembers;
+    }
+
+    @Override
+    public String getIdentifier() {
+        return id;
     }
 
     @Override
@@ -82,5 +91,84 @@ public class MemberRankImpl extends AbstractTaxable<MemberPermission> implements
             return true;
         }
         return false;
+    }
+
+    @Override
+    public Builder rankBuilder() {
+        return new Builder(societies, society, this);
+    }
+
+    @Override
+    public MemberImpl.Builder memberBuilder() {
+        return new MemberImpl.Builder(societies, this);
+    }
+
+    @Override
+    public boolean destroy(Cause cause) {
+        if (!societies.queueEvent(new MemberRankChangeEventImpl.Destroy(cause, this))) {
+            society.getRanksRaw().remove(id);
+            if (parent != null) {
+                parent.getChildrenRaw().remove(id);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    protected PermissionChangeEvent createEvent(MemberPermission permission, PermissionState newState, Cause cause) {
+        return new MemberRankChangeEventImpl.ChangePermission(cause, this, permission, newState);
+    }
+
+    Map<String, MemberRank> getChildrenRaw() {
+        return children;
+    }
+
+    Map<UUID, Member> getMembersRaw() {
+        return members;
+    }
+
+    public static class Builder extends AbstractTaxable.Builder<Builder, MemberPermission> implements MemberRank.Builder {
+        private final Societies societies;
+        private final SocietyImpl society;
+        private final MemberRankImpl parent;
+        private Text title;
+        private Text description;
+
+        Builder(Societies societies, SocietyImpl society, MemberRankImpl parent) {
+            super(societies, society, new DefaultTaxable<>(societies, society), parent == null ? AbsolutePermissionHolder.MEMBER : PowerlessPermissionHolder.MEMBER);
+            this.societies = societies;
+            this.society = society;
+            this.parent = parent;
+        }
+
+        @Override
+        public Builder title(Text title) {
+            this.title = title;
+            return this;
+        }
+
+        @Override
+        public Builder description(Text description) {
+            this.description = description;
+            return this;
+        }
+
+        @Override
+        public Optional<MemberRankImpl> build(Cause cause) {
+            CommonMethods.checkNotNullState(title, "title is mandatory");
+            description = CommonMethods.orDefault(description, Text.EMPTY);
+            super.build();
+            MemberRankImpl memberRank = new MemberRankImpl(this);
+            if (!societies.queueEvent(new MemberRankChangeEventImpl.Create(cause, memberRank))) {
+                society.getRanksRaw().put(memberRank.getIdentifier(), memberRank);
+                if (parent != null) {
+                    parent.getChildrenRaw().put(memberRank.getIdentifier(), memberRank);
+                }
+                societies.onSocietyModified();
+                return Optional.of(memberRank);
+            }
+            return Optional.empty();
+        }
     }
 }

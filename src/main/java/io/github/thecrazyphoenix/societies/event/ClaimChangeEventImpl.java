@@ -1,7 +1,7 @@
 package io.github.thecrazyphoenix.societies.event;
 
 import io.github.thecrazyphoenix.societies.api.event.ClaimChangeEvent;
-import io.github.thecrazyphoenix.societies.api.land.Claim;
+import io.github.thecrazyphoenix.societies.api.society.Claim;
 import org.spongepowered.api.event.cause.Cause;
 
 import java.math.BigDecimal;

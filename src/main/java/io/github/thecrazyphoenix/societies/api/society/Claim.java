@@ -1,10 +1,8 @@
-package io.github.thecrazyphoenix.societies.api.land;
+package io.github.thecrazyphoenix.societies.api.society;
 
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
-import io.github.thecrazyphoenix.societies.api.society.MemberRank;
-import io.github.thecrazyphoenix.societies.api.society.SocietyElement;
-import io.github.thecrazyphoenix.societies.api.society.SubSociety;
+import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import org.spongepowered.api.event.cause.Cause;
 
 import java.math.BigDecimal;
@@ -75,7 +73,7 @@ public interface Claim extends SocietyElement, ClaimedLand {
      * Retrieves all the member claims this claim contains.
      * Before modifying this set, users should check {@link #isContaining(Cuboid)} on the MemberClaim to ensure that the member claim is correctly classified.
      * Modifying this set with an invalid value may cause undefined behaviour.
-     * @return The retrieved member claims as a mutable set.
+     * @return The retrieved member claims as an unmodifiable set.
      */
     Set<MemberClaim> getMemberClaims();
 
@@ -107,4 +105,71 @@ public interface Claim extends SocietyElement, ClaimedLand {
      * @return True if the modification took place, false otherwise.
      */
     boolean setLandValue(BigDecimal value, Cause cause);
+
+    /**
+     * Creates a new member claim builder with this claim as the parent.
+     * @return The created builder.
+     */
+    MemberClaim.Builder memberClaimBuilder();
+
+    /**
+     * Creates a new cuboid builder with this claim as the parent.
+     * @return The created builder.
+     */
+    Cuboid.Builder cuboidBuilder();
+
+    /**
+     * Attempts to destroy this object.
+     * @param cause The cause of the construction of the object.
+     * @return True if the object was destroyed, false if the event was cancelled.
+     */
+    boolean destroy(Cause cause);
+
+    /**
+     * Enables the construction of a new object.
+     */
+    interface Builder {
+        /**
+         * Sets the created claim's land tax.
+         * This parameter defaults to {@link BigDecimal#ZERO}
+         * @return This object for chaining.
+         */
+        Builder landTax(BigDecimal landTax);
+
+        /**
+         * Sets the created claim's land value.
+         * This parameter defaults to {@link BigDecimal#ZERO}
+         * @return This object for chaining.
+         */
+        Builder landValue(BigDecimal landValue);
+
+        /**
+         * Sets the default given permission to the given value for the created claim.
+         * All permissions default to {@link PermissionState#NONE}.
+         * @return This object for chaining.
+         */
+        Builder defaultPermission(ClaimPermission permission, PermissionState value);
+
+        /**
+         * Sets the given member rank's given permission to the given value for the created claim.
+         * All permissions default to {@link PermissionState#NONE}.
+         * @return This object for chaining.
+         */
+        Builder memberRankPermission(MemberRank rank, ClaimPermission permission, PermissionState value);
+
+        /**
+         * Sets the given sub-society's given permission to the given value for the created claim.
+         * All permissions default to {@link PermissionState#NONE}.
+         * @return This object for chaining.
+         */
+        Builder subSocietyPermission(SubSociety subSociety, ClaimPermission permission, PermissionState value);
+
+        /**
+         * Constructs and registers the object.
+         * @param cause The cause of the construction of the object.
+         * @return The created object, or {@link Optional#empty()} if the creation event was cancelled.
+         * @throws IllegalStateException If mandatory parameters have not been set.
+         */
+        Optional<? extends Claim> build(Cause cause);
+    }
 }

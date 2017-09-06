@@ -1,41 +1,47 @@
 package io.github.thecrazyphoenix.societies.config;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.reflect.TypeToken;
 import io.github.thecrazyphoenix.societies.Societies;
-import io.github.thecrazyphoenix.societies.api.land.Claim;
-import io.github.thecrazyphoenix.societies.api.land.Cuboid;
-import io.github.thecrazyphoenix.societies.api.land.MemberClaim;
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.permission.SocietyPermission;
+import io.github.thecrazyphoenix.societies.api.society.Claim;
+import io.github.thecrazyphoenix.societies.api.society.Cuboid;
 import io.github.thecrazyphoenix.societies.api.society.Member;
+import io.github.thecrazyphoenix.societies.api.society.MemberClaim;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.api.society.SubSociety;
 import io.github.thecrazyphoenix.societies.api.society.Taxable;
-import io.github.thecrazyphoenix.societies.land.ClaimImpl;
-import io.github.thecrazyphoenix.societies.land.CuboidImpl;
-import io.github.thecrazyphoenix.societies.land.MemberClaimImpl;
-import io.github.thecrazyphoenix.societies.permission.PermissionHolderImpl;
-import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
+import io.github.thecrazyphoenix.societies.society.ClaimImpl;
+import io.github.thecrazyphoenix.societies.society.CuboidImpl;
+import io.github.thecrazyphoenix.societies.society.MemberClaimImpl;
 import io.github.thecrazyphoenix.societies.society.MemberImpl;
 import io.github.thecrazyphoenix.societies.society.MemberRankImpl;
 import io.github.thecrazyphoenix.societies.society.SocietyImpl;
 import io.github.thecrazyphoenix.societies.society.SubSocietyImpl;
-import com.google.common.reflect.TypeToken;
+import io.github.thecrazyphoenix.societies.society.internal.AbstractTaxable;
+import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.text.Text;
 
 import java.math.BigDecimal;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
+@SuppressWarnings("ConstantConditions")
 public class SocietySerializer {
     private static final String WORLD_KEY = "world";
     private static final String NAME_KEY = "name";
@@ -44,15 +50,13 @@ public class SocietySerializer {
     private static final String MEMBERS_KEY = "members";
     private static final String SUB_SOCIETIES_KEY = "sub-societies";
     private static final String CLAIMS_KEY = "claims";
+    private static final String SOCIETY_KEY = "society";
 
-    private static final String ID_KEY = "id";
-    private static final String PARENT_KEY = "parent";
     private static final String TITLE_KEY = "title";
     private static final String DESCRIPTION_KEY = "description";
+    private static final String CHILDREN_KEY = "children";
 
     private static final String UUID_KEY = "uuid";
-    private static final String RANK_KEY = "rank";
-    private static final String LEADER_KEY = "leader";
 
     private static final String FIXED_TAX_KEY = "fixed-tax";
     private static final String SALARY_KEY = "salary";
@@ -76,123 +80,206 @@ public class SocietySerializer {
     private static final TypeToken<Vector3i> VECTOR3I_TOKEN = TypeToken.of(Vector3i.class);
 
     private Logger logger;
-    private Societies societies;
+    private Societies.SocietiesServiceImpl societies;
 
-    public SocietySerializer(Logger logger, Societies societies) {
+    public SocietySerializer(Logger logger, Societies.SocietiesServiceImpl societies) {
         this.logger = logger;
         this.societies = societies;
     }
 
-    public void serializeSocieties(final ConfigurationNode rootNode, Map<UUID, Map<String, Society>> societies, Map<UUID, Map<String, Society>> allSocieties) {
-        allSocieties.values().stream().flatMap(m -> m.values().stream()).forEach(society -> serializeSociety(society, rootNode.getAppendedNode()));
+    public void serializeSocieties(ConfigurationNode node, Stream<Society> societies) {
+        Map<Society, ConfigurationNode> incomplete = new HashMap<>();
+        Map<Society, ConfigurationNode> buffer = new HashMap<>();
+        societies.forEach(s -> serializeSocietyFull(s, node.getAppendedNode(), incomplete));
+        while (incomplete.size() > 0) {
+            incomplete.forEach((s, n) -> serializeSocietyFull(s, n, buffer));
+            incomplete.clear();
+            incomplete.putAll(buffer);
+            buffer.clear();
+        }
     }
 
-    public void deserializeSocieties(ConfigurationNode rootNode, Map<UUID, Map<String, Society>> societies, final Map<UUID, Map<String, Society>> allSocieties) {
-        rootNode.getChildrenList().forEach(this::deserializeSociety);
-        allSocieties.values().stream().flatMap(m -> m.values().stream()).flatMap(s -> s.getSubSocieties().values().stream()).map(SubSociety::toSociety).forEach(s -> societies.get(s.getWorldUUID()).remove(s.getIdentifier()));
-        SubSocietyImpl.updateNeeded(allSocieties);
+    public void deserializeSocieties(ConfigurationNode node) {
+        Map<SocietyImpl, ConfigurationNode> incomplete = new HashMap<>();
+        Map<SocietyImpl, ConfigurationNode> buffer = new HashMap<>();
+        node.getChildrenList().forEach(n -> deserializeSocietyFull(n, incomplete));
+        while (incomplete.size() > 0) {
+            incomplete.forEach((s, n) -> deserializeSocietyFinish(s, n, buffer));
+            incomplete.clear();
+            incomplete.putAll(buffer);
+            buffer.clear();
+        }
     }
 
-    private void serializeSociety(Society society, ConfigurationNode node) {
+    private void serializeSocietyFull(Society society, ConfigurationNode node, Map<Society, ConfigurationNode> incomplete) {
         try {
-            node.getNode(WORLD_KEY).setValue(UUID_TOKEN, society.getWorldUUID());
-            node.getNode(NAME_KEY).setValue(TEXT_TOKEN, society.getName());
-            node.getNode(ABBREVIATED_NAME_KEY).setValue(TEXT_TOKEN, society.getAbbreviatedName());
-            society.getRanks().forEach((key, rank) -> serializeRank(rank, node.getNode(RANKS_KEY, key)));
-            society.getMembers().values().forEach(member -> serializeMember(member, node.getNode(MEMBERS_KEY).getAppendedNode()));
-            society.getSubSocieties().values().forEach(ss -> serializeSubSociety(ss, node.getNode(SUB_SOCIETIES_KEY).getAppendedNode()));
-            society.getClaims().forEach(claim -> serializeClaim(claim, node.getNode(CLAIMS_KEY).getAppendedNode()));
+            serializeSociety(society, node);
+            Deque<MemberRank> ranks = new LinkedList<>();
+            Deque<ConfigurationNode> nodes = new LinkedList<>();
+            for (MemberRank rank : society.getRanks().values()) {
+                ranks.add(rank);
+                nodes.add(node.getNode(RANKS_KEY).getAppendedNode());
+            }
+            while (ranks.size() > 0) {
+                MemberRank rank = ranks.pop();
+                ConfigurationNode current = nodes.pop();
+                serializeRank(rank, current);
+                for (MemberRank child : rank.getChildren().values()) {
+                    ranks.add(child);
+                    nodes.add(current.getNode(CHILDREN_KEY).getAppendedNode());
+                }
+                for (Member member : rank.getMembers().values()) {
+                    serializeMember(member, current.getNode(MEMBERS_KEY).getAppendedNode());
+                }
+            }
+            for (SubSociety subSociety : society.getSubSocieties().values()) {
+                serializeSubSociety(subSociety, node.getNode(SUB_SOCIETIES_KEY).getAppendedNode(), incomplete);
+            }
+            for (Claim claim : society.getClaims()) {
+                serializeClaim(claim, node.getNode(CLAIMS_KEY).getAppendedNode());
+            }
         } catch (ObjectMappingException e) {
             logger.warn("Failed to serialize society", e);
         }
     }
 
-    private void deserializeSociety(final ConfigurationNode node) {
+    private void deserializeSocietyFull(ConfigurationNode node, Map<SocietyImpl, ConfigurationNode> incomplete) {
         try {
-            final Society society = new SocietyImpl(societies, node.getNode(WORLD_KEY).getValue(UUID_TOKEN), node.getNode(NAME_KEY).getValue(TEXT_TOKEN), node.getNode(ABBREVIATED_NAME_KEY).getValue(TEXT_TOKEN), null);
-            node.getNode(RANKS_KEY).getChildrenList().forEach(n -> deserializeRank(society, n));
-            society.getRanks().values().forEach(rank -> rank.setParent(society.getRanks().get(node.getNode(RANKS_KEY, PARENT_KEY).getString()), null));
-            node.getNode(MEMBERS_KEY).getChildrenList().forEach(n -> deserializeMember(society, n));
-            node.getNode(SUB_SOCIETIES_KEY).getChildrenList().forEach(n -> deserializeSubSociety(society, n));
-            node.getNode(CLAIMS_KEY).getChildrenList().forEach(n -> deserializeClaim(society, n));
+            SocietyImpl.Builder builder = societies.societyBuilder();
+            deserializeSociety(builder, node);
+            SocietyImpl society = builder.build(null).get();
+            deserializeSocietyFinish(society, node, incomplete);
         } catch (ObjectMappingException e) {
             logger.warn("Failed to deserialize society", e);
         }
     }
 
-    private void serializeClaim(Claim claim, ConfigurationNode node) {
+    private void deserializeSocietyFinish(SocietyImpl society, ConfigurationNode node, Map<SocietyImpl, ConfigurationNode> incomplete) {
         try {
-            for (Cuboid cuboid : claim.getClaimCuboids()) {
-                serializeCuboid(cuboid, node.getNode(CUBOIDS_KEY).getAppendedNode());
+            Deque<MemberRankImpl> ranks = new LinkedList<>();
+            Deque<ConfigurationNode> nodes = new LinkedList<>();
+            for (ConfigurationNode child : node.getNode(RANKS_KEY).getChildrenList()) {
+                MemberRankImpl.Builder rankBuilder = society.rankBuilder();
+                deserializeRank(rankBuilder, child);
+                ranks.add(rankBuilder.build(null).get());
+                nodes.add(child);
             }
-            node.getNode(LAND_TAX_KEY).setValue(BIG_DECIMAL_TOKEN, claim.getLandTax());
-            node.getNode(LAND_VALUE_KEY).setValue(BIG_DECIMAL_TOKEN, claim.getLandValue());
-            serializePermissions(claim.getDefaultPermissions(), node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission.values());
-            for (Map.Entry<MemberRank, PermissionHolder<ClaimPermission>> entry : claim.getMemberRankPermissions().entrySet()) {
-                serializePermissions(entry.getValue(), node.getNode(MEMBER_PERMISSIONS_KEY, entry.getKey().getIdentifier()), ClaimPermission.values());
+            while (ranks.size() > 0) {
+                MemberRankImpl rank = ranks.pop();
+                ConfigurationNode current = nodes.pop();
+                for (ConfigurationNode child : current.getNode(CHILDREN_KEY).getChildrenList()) {
+                    MemberRankImpl.Builder rankBuilder = society.rankBuilder();
+                    deserializeRank(rankBuilder, child);
+                    ranks.add(rankBuilder.build(null).get());
+                    nodes.add(child);
+                }
+                for (ConfigurationNode child : current.getNode(MEMBERS_KEY).getChildrenList()) {
+                    MemberImpl.Builder memberBuilder = rank.memberBuilder();
+                    deserializeMember(memberBuilder, child);
+                    memberBuilder.build(null);
+                }
             }
-            for (Map.Entry<SubSociety, PermissionHolder<ClaimPermission>> entry : claim.getSubSocietyPermissions().entrySet()) {
-                serializePermissions(entry.getValue(), node.getNode(SOCIETY_PERMISSIONS_KEY, entry.getKey().toSociety().getIdentifier()), ClaimPermission.values());
+            for (ConfigurationNode child : node.getNode(SUB_SOCIETIES_KEY).getChildrenList()) {
+                SubSocietyImpl.Builder subSocietyBuilder = society.subSocietyBuilder();
+                deserializeSubSociety(subSocietyBuilder, child, incomplete);
+                subSocietyBuilder.build(null);
             }
-            for (MemberClaim memberClaim : claim.getMemberClaims()) {
-                serializeMemberClaim(memberClaim, node.getNode(MEMBER_CLAIMS_KEY).getAppendedNode());
+            for (ConfigurationNode child : node.getNode(CLAIMS_KEY).getChildrenList()) {
+                ClaimImpl.Builder claimBuilder = society.claimBuilder();
+                deserializeClaim(claimBuilder, child);
+                ClaimImpl claim = claimBuilder.build(null).get();
+                for (ConfigurationNode grandchild : child.getNode(CUBOIDS_KEY).getChildrenList()) {
+                    CuboidImpl.Builder cuboidBuilder = claim.cuboidBuilder();
+                    deserializeCuboid(cuboidBuilder, grandchild);
+                    cuboidBuilder.build(null);
+                }
+                for (ConfigurationNode grandchild : child.getNode(MEMBER_CLAIMS_KEY).getChildrenList()) {
+                    MemberClaimImpl.Builder memberClaimBuilder = claim.memberClaimBuilder();
+                    deserializeMemberClaim(memberClaimBuilder, grandchild);
+                    memberClaimBuilder.build(null);
+                }
             }
         } catch (ObjectMappingException e) {
-            logger.warn("Failed to serialize claim", e);
+            logger.warn("Failed to deserialize society", e);
         }
     }
 
-    private void deserializeClaim(Society society, ConfigurationNode node) {
-        Claim claim = new ClaimImpl(societies, society, new PermissionHolderImpl<>(societies, society, PowerlessPermissionHolder.CLAIM), null);
-        try {
-            for (ConfigurationNode child : node.getNode(CUBOIDS_KEY).getChildrenList()) {
-                claim.getClaimCuboids().add(deserializeCuboid(society, child));
-            }
-            claim.setLandTax(node.getNode(LAND_TAX_KEY).getValue(BIG_DECIMAL_TOKEN), null);
-            claim.setLandValue(node.getNode(LAND_VALUE_KEY).getValue(BIG_DECIMAL_TOKEN), null);
-            deserializePermissions(claim.getDefaultPermissions(), node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission::valueOf);
-            PermissionHolder<ClaimPermission> buffer;
-            for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.getNode(MEMBER_PERMISSIONS_KEY).getChildrenMap().entrySet()) {
-                //noinspection SuspiciousMethodCalls
-                claim.setPermissions(society.getRanks().get(entry.getKey()), buffer = new PermissionHolderImpl<>(societies, society, PowerlessPermissionHolder.CLAIM));
-                deserializePermissions(buffer, entry.getValue(), ClaimPermission::valueOf);
-            }
-            for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.getNode(SOCIETY_PERMISSIONS_KEY).getChildrenMap().entrySet()) {
-                //noinspection SuspiciousMethodCalls
-                claim.setPermissions(society.getSubSocieties().get(entry.getKey()), buffer = new PermissionHolderImpl<>(societies, society, PowerlessPermissionHolder.CLAIM));
-                deserializePermissions(buffer, entry.getValue(), ClaimPermission::valueOf);
-            }
-            for (ConfigurationNode n : node.getNode(MEMBER_CLAIMS_KEY).getChildrenList()) {
-                deserializeMemberClaim(claim, n);
-            }
-        } catch (ObjectMappingException e) {
-            logger.warn("Failed to deserialize claim", e);
-            society.getClaims().remove(claim);
+    private void serializeSociety(Society society, ConfigurationNode node) throws ObjectMappingException {
+        node.getNode(WORLD_KEY).setValue(UUID_TOKEN, society.getWorldUUID());
+        node.getNode(NAME_KEY).setValue(TEXT_TOKEN, society.getName());
+        node.getNode(ABBREVIATED_NAME_KEY).setValue(TEXT_TOKEN, society.getAbbreviatedName());
+    }
+
+    private void deserializeSociety(SocietyImpl.Builder builder, ConfigurationNode node) throws ObjectMappingException {
+        builder.world(node.getNode(WORLD_KEY).getValue(UUID_TOKEN)).name(node.getNode(NAME_KEY).getValue(TEXT_TOKEN)).abbreviatedName(node.getNode(ABBREVIATED_NAME_KEY).getValue(TEXT_TOKEN));
+    }
+
+    private void serializeSubSociety(SubSociety subSociety, ConfigurationNode node, Map<Society, ConfigurationNode> incomplete) throws ObjectMappingException {
+        serializeTaxable(subSociety, node);
+        serializePermissions(subSociety, node.getNode("permissions"), SocietyPermission.values());
+        incomplete.put(subSociety.toSociety(), node.getNode(SOCIETY_KEY));
+    }
+
+    private void deserializeSubSociety(SubSocietyImpl.Builder builder, ConfigurationNode node, Map<SocietyImpl, ConfigurationNode> incomplete) throws ObjectMappingException {
+        SocietyImpl.Builder societyBuilder = societies.societyBuilder();
+        deserializeSociety(societyBuilder, node.getNode(SOCIETY_KEY));
+        SocietyImpl society = societyBuilder.build(null).get();
+        incomplete.put(society, node.getNode(SOCIETY_KEY));
+        builder.subSociety(society);
+        deserializeTaxable(builder, node);
+        deserializePermissions(builder::permission, node.getNode(PERMISSIONS_KEY), SocietyPermission::valueOf);
+    }
+
+    private void serializeClaim(Claim claim, ConfigurationNode node) throws ObjectMappingException {
+        node.getNode(LAND_TAX_KEY).setValue(BIG_DECIMAL_TOKEN, claim.getLandTax());
+        node.getNode(LAND_VALUE_KEY).setValue(BIG_DECIMAL_TOKEN, claim.getLandValue());
+        serializePermissions(claim.getDefaultPermissions(), node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission.values());
+        for (Cuboid cuboid : claim.getClaimCuboids()) {
+            serializeCuboid(cuboid, node.getNode(CUBOIDS_KEY).getAppendedNode());
+        }
+        for (MemberClaim memberClaim : claim.getMemberClaims()) {
+            serializeMemberClaim(memberClaim, node.getNode(MEMBER_CLAIMS_KEY).getAppendedNode());
+        }
+        for (Map.Entry<MemberRank, PermissionHolder<ClaimPermission>> entry : claim.getMemberRankPermissions().entrySet()) {
+            serializePermissions(entry.getValue(), node.getNode(MEMBER_PERMISSIONS_KEY, entry.getKey().getIdentifier()), ClaimPermission.values());
+        }
+        for (Map.Entry<SubSociety, PermissionHolder<ClaimPermission>> entry : claim.getSubSocietyPermissions().entrySet()) {
+            serializePermissions(entry.getValue(), node.getNode(SOCIETY_PERMISSIONS_KEY, entry.getKey().toSociety().getIdentifier()), ClaimPermission.values());
         }
     }
 
-    private void serializeMemberClaim(MemberClaim memberClaim, final ConfigurationNode node) throws ObjectMappingException {
+    @SuppressWarnings("SuspiciousMethodCalls")
+    private void deserializeClaim(ClaimImpl.Builder builder, ConfigurationNode node) throws ObjectMappingException {
+        builder.landTax(node.getNode(LAND_TAX_KEY).getValue(BIG_DECIMAL_TOKEN)).landValue(node.getNode(LAND_VALUE_KEY).getValue(BIG_DECIMAL_TOKEN));
+        deserializePermissions(builder::defaultPermission, node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission::valueOf);
+        for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.getNode(MEMBER_PERMISSIONS_KEY).getChildrenMap().entrySet()) {
+            MemberRank rank = builder.getSociety().getRanks().get(entry.getKey());
+            deserializePermissions((p, v) -> builder.memberRankPermission(rank, p, v), entry.getValue(), ClaimPermission::valueOf);
+        }
+        for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.getNode(SOCIETY_PERMISSIONS_KEY).getChildrenMap().entrySet()) {
+            SubSociety subSociety = builder.getSociety().getSubSocieties().get(entry.getKey());
+            deserializePermissions((p, v) -> builder.subSocietyPermission(subSociety, p, v), entry.getValue(), ClaimPermission::valueOf);
+        }
+    }
+
+    private void serializeMemberClaim(MemberClaim memberClaim, ConfigurationNode node) throws ObjectMappingException {
         Optional<Member> owner = memberClaim.getOwner();
         if (owner.isPresent()) {
-            node.getNode(OWNER_KEY).setValue(UUID_TOKEN, owner.get().getUser().getUniqueId());
+            node.getNode(OWNER_KEY).setValue(UUID_TOKEN, owner.get().getUser());
         }
         serializeCuboid(memberClaim, node);
         serializePermissions(memberClaim.getDefaultPermissions(), node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission.values());
         for (Map.Entry<Member, PermissionHolder<ClaimPermission>> entry : memberClaim.getMemberPermissions().entrySet()) {
-            serializePermissions(entry.getValue(), node.getNode(MEMBER_PERMISSIONS_KEY, entry.getKey().getUser().getUniqueId()), ClaimPermission.values());
+            serializePermissions(entry.getValue(), node.getNode(MEMBER_PERMISSIONS_KEY, entry.getKey().getUser()), ClaimPermission.values());
         }
     }
 
-    private void deserializeMemberClaim(Claim parent, ConfigurationNode node) throws ObjectMappingException {
-        Society society = parent.getSociety();
-        PermissionHolder<ClaimPermission> defaultPermissions = new PermissionHolderImpl<>(societies, society, PowerlessPermissionHolder.CLAIM);
-        MemberClaim memberClaim = new MemberClaimImpl(societies, parent, society.getMembers().get(node.getNode(OWNER_KEY).getValue(UUID_TOKEN)), defaultPermissions, node.getNode(CORNER1_KEY).getValue(VECTOR3I_TOKEN), node.getNode(CORNER2_KEY).getValue(VECTOR3I_TOKEN), null);
-        deserializePermissions(defaultPermissions, node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission::valueOf);
-        PermissionHolder<ClaimPermission> buffer;
+    private void deserializeMemberClaim(MemberClaimImpl.Builder builder, ConfigurationNode node) throws ObjectMappingException {
+        deserializeCuboid(builder, node);
+        deserializePermissions(builder::defaultPermission, node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission::valueOf);
         for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.getNode(MEMBER_PERMISSIONS_KEY).getChildrenMap().entrySet()) {
-            //noinspection SuspiciousMethodCalls
-            memberClaim.setPermissions(society.getMembers().get(entry.getKey()), buffer = new PermissionHolderImpl<>(societies, society, PowerlessPermissionHolder.CLAIM));
-            deserializePermissions(buffer, entry.getValue(), ClaimPermission::valueOf);
+            Member member = builder.getSociety().getMembers().get(UUID.fromString((String) entry.getKey()));
+            deserializePermissions((p, v) -> builder.memberPermission(member, p, v), entry.getValue(), ClaimPermission::valueOf);
         }
     }
 
@@ -201,98 +288,36 @@ public class SocietySerializer {
         node.getNode(CORNER2_KEY).setValue(VECTOR3I_TOKEN, cuboid.getSecondCorner());
     }
 
-    private Cuboid deserializeCuboid(Society society, ConfigurationNode node) throws ObjectMappingException {
-        return new CuboidImpl(societies, society, node.getNode(CORNER1_KEY).getValue(VECTOR3I_TOKEN), node.getNode(CORNER2_KEY).getValue(VECTOR3I_TOKEN));
+    private void deserializeCuboid(CuboidImpl.Builder builder, ConfigurationNode node) throws ObjectMappingException {
+        builder.corners(node.getNode(CORNER1_KEY).getValue(VECTOR3I_TOKEN), node.getNode(CORNER2_KEY).getValue(VECTOR3I_TOKEN));
     }
 
-    private void serializeSubSociety(SubSociety subSociety, ConfigurationNode node) {
-        try {
-            node.getNode(ID_KEY).setValue(subSociety.toSociety().getIdentifier());
-            serializeTaxable(subSociety, node);
-            serializePermissions(subSociety, node.getNode("permissions"), SocietyPermission.values());
-        } catch (ObjectMappingException e) {
-            logger.warn("Failed to serialize sub-society", e);
-        }
+    private void serializeRank(MemberRank rank, final ConfigurationNode node) throws ObjectMappingException {
+        node.getNode(TITLE_KEY).setValue(TEXT_TOKEN, rank.getTitle());
+        node.getNode(DESCRIPTION_KEY).setValue(TEXT_TOKEN, rank.getDescription());
+        serializeTaxable(rank, node);
+        serializePermissions(rank, node.getNode(PERMISSIONS_KEY), MemberPermission.values());
     }
 
-    private void deserializeSubSociety(Society society, ConfigurationNode node) {
-        SubSociety subSociety = new SubSocietyImpl(societies, society, node.getNode(ID_KEY).getString(), null);
-        try {
-            deserializeTaxable(subSociety, node);
-            deserializePermissions(subSociety, node, SocietyPermission::valueOf);
-        } catch (ObjectMappingException e) {
-            logger.warn("Failed to deserialize sub-society", e);
-            //noinspection SuspiciousMethodCalls
-            society.getSubSocieties().remove(subSociety);
-        }
+    private void deserializeRank(MemberRankImpl.Builder builder, ConfigurationNode node) throws ObjectMappingException {
+        builder.title(node.getNode(TITLE_KEY).getValue(TEXT_TOKEN)).description(node.getNode(DESCRIPTION_KEY).getValue(TEXT_TOKEN));
+        deserializeTaxable(builder, node);
+        deserializePermissions(builder::permission, node.getNode(PERMISSIONS_KEY), MemberPermission::valueOf);
     }
 
-    private void serializeMember(Member member, ConfigurationNode node) {
-        try {
-            node.getNode(UUID_KEY).setValue(UUID_TOKEN, member.getUser().getUniqueId());
-            node.getNode(RANK_KEY).setValue(member.getRank().getIdentifier());
-            if (member.getTitle() == member.getRank().getTitle()) {
-                node.getNode(TITLE_KEY).setValue(TEXT_TOKEN, member.getTitle());
-            }
-            serializeTaxable(member, node);
-            serializePermissions(member, node.getNode(PERMISSIONS_KEY), MemberPermission.values());
-            if (member.getSociety().getLeaders().containsKey(member.getUser().getUniqueId())) {
-                node.getNode(LEADER_KEY).setValue(true);
-            }
-        } catch (ObjectMappingException e) {
-            logger.warn("Failed to serialize member", e);
+    private void serializeMember(Member member, ConfigurationNode node) throws ObjectMappingException {
+        node.getNode(UUID_KEY).setValue(UUID_TOKEN, member.getUser());
+        if (member.getTitle() == member.getRank().getTitle()) {
+            node.getNode(TITLE_KEY).setValue(TEXT_TOKEN, member.getTitle());
         }
+        serializeTaxable(member, node);
+        serializePermissions(member, node.getNode(PERMISSIONS_KEY), MemberPermission.values());
     }
 
-    private void deserializeMember(Society society, ConfigurationNode node) {
-        Member member = null;
-        try {
-            boolean leader = node.getNode(LEADER_KEY).getBoolean();
-            UUID uuid = node.getNode(UUID_KEY).getValue(UUID_TOKEN);
-            member = new MemberImpl(societies, society, uuid, society.getRanks().get(node.getNode(RANK_KEY).getString()), leader, null);
-            Text buffer = node.getNode(TITLE_KEY).getValue(TEXT_TOKEN);
-            if (buffer != null) {
-                member.setTitle(buffer, null);
-            }
-            deserializeTaxable(member, node);
-            deserializePermissions(member, node.getNode(PERMISSIONS_KEY), MemberPermission::valueOf);
-            if (leader) {
-                society.getLeaders().put(uuid, member);
-            }
-        } catch (ObjectMappingException e) {
-            logger.warn("Failed to deserialize member", e);
-            if (member != null) {
-                society.getMembers().remove(member.getUser().getUniqueId());
-                society.getLeaders().remove(member.getUser().getUniqueId());
-            }
-        }
-    }
-
-    private void serializeRank(MemberRank rank, final ConfigurationNode node) {
-        try {
-            rank.getParent().ifPresent(r -> node.getNode(PARENT_KEY).setValue(r.getIdentifier()));
-            node.getNode(TITLE_KEY).setValue(TEXT_TOKEN, rank.getTitle());
-            node.getNode(DESCRIPTION_KEY).setValue(TEXT_TOKEN, rank.getDescription());
-            serializeTaxable(rank, node);
-            serializePermissions(rank, node.getNode(PERMISSIONS_KEY), MemberPermission.values());
-        } catch (ObjectMappingException e) {
-            logger.warn("Failed to serialize member rank", e);
-        }
-    }
-
-    private void deserializeRank(Society society, ConfigurationNode node) {
-        MemberRank rank = null;
-        try {
-            rank = new MemberRankImpl(societies, society, null, node.getNode(TITLE_KEY).getValue(TEXT_TOKEN), null);
-            rank.setDescription(node.getNode(DESCRIPTION_KEY).getValue(TEXT_TOKEN), null);
-            deserializeTaxable(rank, node);
-            deserializePermissions(rank, node.getNode(PERMISSIONS_KEY), MemberPermission::valueOf);
-        } catch (ObjectMappingException e) {
-            logger.warn("Failed to deserialize member rank", e);
-            if (rank != null) {
-                society.getRanks().remove(rank.getTitle().toPlain());
-            }
-        }
+    private void deserializeMember(MemberImpl.Builder builder, ConfigurationNode node) throws ObjectMappingException {
+        builder.user(node.getNode(UUID_KEY).getValue(UUID_TOKEN)).title(node.getNode(TITLE_KEY).getValue(TEXT_TOKEN));
+        deserializeTaxable(builder, node);
+        deserializePermissions(builder::permission, node.getNode(PERMISSIONS_KEY), MemberPermission::valueOf);
     }
 
     private void serializeTaxable(Taxable taxable, ConfigurationNode node) throws ObjectMappingException {
@@ -300,9 +325,9 @@ public class SocietySerializer {
         node.getNode(SALARY_KEY).setValue(BIG_DECIMAL_TOKEN, taxable.getSalary());
     }
 
-    private void deserializeTaxable(Taxable taxable, ConfigurationNode node) throws ObjectMappingException {
-        taxable.setSalary(node.getNode(SALARY_KEY).getValue(BIG_DECIMAL_TOKEN), null);
-        taxable.setFixedTax(node.getNode(FIXED_TAX_KEY).getValue(BIG_DECIMAL_TOKEN), null);
+    private void deserializeTaxable(AbstractTaxable.Builder<?, ?> builder, ConfigurationNode node) throws ObjectMappingException {
+        builder.salary(node.getNode(SALARY_KEY).getValue(BIG_DECIMAL_TOKEN));
+        builder.fixedTax(node.getNode(FIXED_TAX_KEY).getValue(BIG_DECIMAL_TOKEN));
     }
 
     private <T extends Enum<T>> void serializePermissions(PermissionHolder<T> holder, ConfigurationNode node, T[] values) {
@@ -318,7 +343,7 @@ public class SocietySerializer {
         }
     }
 
-    private <T extends Enum<T>> void deserializePermissions(final PermissionHolder<T> holder, ConfigurationNode node, final Function<String, T> getter) {
-        node.getChildrenList().stream().map(ConfigurationNode::getString).map(getter).forEach(perm -> holder.setPermission(perm, PermissionState.TRUE, null));
+    private <T extends Enum<T>> void deserializePermissions(BiConsumer<T, PermissionState> consumer, ConfigurationNode node, Function<? super String, T> getter) {
+        node.getChildrenMap().forEach((Object k, ConfigurationNode n) -> consumer.accept(getter.apply((String) k), CommonMethods.intToState(node.getInt())));
     }
 }

@@ -2,14 +2,14 @@ package io.github.thecrazyphoenix.societies.event;
 
 import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.event.MemberClaimChangeEvent;
-import io.github.thecrazyphoenix.societies.api.land.MemberClaim;
+import io.github.thecrazyphoenix.societies.api.society.MemberClaim;
 import org.spongepowered.api.event.cause.Cause;
 
-public class MemberClaimChangeEventImpl extends ClaimChangeEventImpl implements MemberClaimChangeEvent {
+public class MemberClaimChangeEventImpl extends CuboidChangeEventImpl implements MemberClaimChangeEvent {
     private MemberClaim memberClaim;
 
     public MemberClaimChangeEventImpl(Cause cause, MemberClaim memberClaim) {
-        super(cause, memberClaim.getParent());
+        super(cause, memberClaim);
         this.memberClaim = memberClaim;
     }
 

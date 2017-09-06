@@ -1,63 +1,81 @@
 package io.github.thecrazyphoenix.societies.society;
 
 import io.github.thecrazyphoenix.societies.Societies;
+import io.github.thecrazyphoenix.societies.api.event.PermissionChangeEvent;
+import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.permission.SocietyPermission;
 import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.api.society.SubSociety;
 import io.github.thecrazyphoenix.societies.event.SubSocietyChangeEventImpl;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
+import io.github.thecrazyphoenix.societies.society.internal.AbstractTaxable;
+import io.github.thecrazyphoenix.societies.society.internal.DefaultTaxable;
+import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.Optional;
 
 public class SubSocietyImpl extends AbstractTaxable<SocietyPermission> implements SubSociety {
-    private static final Set<SubSocietyImpl> NEEDS_UPDATE = new HashSet<>();
+    private Society subSociety;
 
-    private Society society;
-    private String societyID;
-
-    public SubSocietyImpl(Societies societies, Society owner, Society subSociety, Cause cause) {
-        this(cause, societies, owner, subSociety.getIdentifier());
-        society = subSociety;
-        if (!societies.queueEvent(new SubSocietyChangeEventImpl.Create(cause, this))) {
-            owner.getSubSocieties().put(societyID = subSociety.getAccount().getIdentifier(), this);
-            societies.getSocietiesService().getSocieties(society.getWorldUUID()).remove(subSociety.getIdentifier());
-        } else {
-            throw new UnsupportedOperationException("create event cancelled");
-        }
-    }
-
-    public SubSocietyImpl(Societies societies, Society owner, String subSocietyID, Cause cause) {
-        this(cause, societies, owner, subSocietyID);
-        societyID = subSocietyID;
-        NEEDS_UPDATE.add(this);
-    }
-
-    private SubSocietyImpl(Cause cause, Societies societies, Society owner, String id) {
-        super(societies, owner, new DefaultTaxable<>(societies, owner), PowerlessPermissionHolder.SOCIETY);
-        if (societies.queueEvent(new SubSocietyChangeEventImpl.Create(cause, this))) {
-            owner.getSubSocieties().put(id, this);
-        } else {
-            throw new UnsupportedOperationException("create event cancelled");
-        }
-    }
-
-    public static void updateNeeded(Map<UUID, Map<String, Society>> societies) {
-        NEEDS_UPDATE.forEach(s -> s.society = societies.get(s.getSociety().getWorldUUID()).get(s.societyID));
-        NEEDS_UPDATE.clear();
+    private SubSocietyImpl(Builder builder) {
+        super(builder);
+        subSociety = builder.subSociety;
     }
 
     @Override
     public Society toSociety() {
-        return society;
+        return subSociety;
     }
 
     @Override
     public Account getAccount() {
-        return society.getAccount();
+        return subSociety.getAccount();
+    }
+
+    @Override
+    public boolean destroy(Cause cause) {
+        if (!societies.queueEvent(new SubSocietyChangeEventImpl.Destroy(cause, this))) {
+            society.getSubSocietiesRaw().remove(subSociety.getIdentifier());
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    protected PermissionChangeEvent createEvent(SocietyPermission permission, PermissionState newState, Cause cause) {
+        return new SubSocietyChangeEventImpl.ChangePermission(cause, this, permission, newState);
+    }
+
+    public static class Builder extends AbstractTaxable.Builder<Builder, SocietyPermission> implements SubSociety.Builder {
+        private final Societies societies;
+        private final SocietyImpl society;
+        private Society subSociety;
+
+        Builder(Societies societies, SocietyImpl society) {
+            super(societies, society, new DefaultTaxable<>(societies, society), PowerlessPermissionHolder.SOCIETY);
+            this.societies = societies;
+            this.society = society;
+        }
+
+        @Override
+        public Builder subSociety(Society subSociety) {
+            this.subSociety = subSociety;
+            return this;
+        }
+
+        @Override
+        public Optional<SubSocietyImpl> build(Cause cause) {        // TODO Check if society is in societies and remove it from that map if event passes.
+            CommonMethods.checkNotNullState(subSociety, "sub-society is mandatory");
+            super.build();
+            SubSocietyImpl subSociety = new SubSocietyImpl(this);
+            if (!societies.queueEvent(new SubSocietyChangeEventImpl.Create(cause, subSociety))) {
+                society.getSubSocietiesRaw().put(this.subSociety.getIdentifier(), subSociety);
+                societies.onSocietyModified();
+                return Optional.of(subSociety);
+            }
+            return Optional.empty();
+        }
     }
 }

@@ -1,8 +1,7 @@
 package io.github.thecrazyphoenix.societies.society;
 
 import io.github.thecrazyphoenix.societies.Societies;
-import io.github.thecrazyphoenix.societies.api.SocietiesService;
-import io.github.thecrazyphoenix.societies.api.land.Claim;
+import io.github.thecrazyphoenix.societies.api.society.Claim;
 import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import io.github.thecrazyphoenix.societies.api.society.Society;
@@ -13,9 +12,11 @@ import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -28,35 +29,24 @@ public class SocietyImpl implements Society {
     private Text abbreviatedName;
     private String accountName;
 
-    private Map<UUID, Member> leaders;
     private Map<UUID, Member> members;
     private Set<Claim> claims;
     private Map<String, MemberRank> ranks;
     private Map<String, SubSociety> subSocieties;
+    private Map<UUID, Member> viewMembers;
+    private Set<Claim> viewClaims;
+    private Map<String, MemberRank> viewRanks;
+    private Map<String, SubSociety> viewSubSocieties;
 
-    public SocietyImpl(Societies societies, UUID worldUUID, Text name, Text abbreviatedName, Cause cause) {
-        if (!CommonMethods.isValidName(name.toPlain())) {
-            throw new IllegalArgumentException("illegal society name: " + name.toPlain());
-        } else if (!CommonMethods.isValidName(abbreviatedName.toPlain()) || abbreviatedName.toPlain().indexOf(' ') != -1) {
-            throw new IllegalArgumentException("illegal society abbreviated name: " + abbreviatedName.toPlain());
-        }
-        this.societies = societies;
-        this.worldUUID = worldUUID;
-        this.name = name;
-        this.abbreviatedName = abbreviatedName;
-        accountName = String.format("%s:%s", Societies.PLUGIN_ID, id = CommonMethods.nameToID(name));
-        leaders = new HashMap<>();
-        members = new HashMap<>();
-        claims = new HashSet<>();
-        ranks = new HashMap<>();
-        subSocieties = new HashMap<>();
-        if (!societies.queueEvent(new SocietyChangeEventImpl.Create(cause, this))) {
-            SocietiesService societiesService = societies.getSocietiesService();
-            societiesService.getSocieties(worldUUID).put(id, this);
-            societiesService.getAllSocieties(worldUUID).put(id, this);
-        } else {
-            throw new UnsupportedOperationException("create event cancelled");
-        }
+    private SocietyImpl(Builder builder) {
+        societies = builder.societies;
+        worldUUID = builder.world;
+        accountName = String.format("%s:%s", Societies.PLUGIN_ID, id = CommonMethods.nameToID(name = builder.name));
+        abbreviatedName = builder.abbreviatedName;
+        viewMembers = Collections.unmodifiableMap(members = new HashMap<>());
+        viewClaims = Collections.unmodifiableSet(claims = new HashSet<>());
+        viewRanks = Collections.unmodifiableMap(ranks = new HashMap<>());
+        viewSubSocieties = Collections.unmodifiableMap(subSocieties = new HashMap<>());
     }
 
     @Override
@@ -80,32 +70,112 @@ public class SocietyImpl implements Society {
     }
 
     @Override
-    public Map<UUID, Member> getLeaders() {
-        return leaders;
-    }
-
-    @Override
     public Map<UUID, Member> getMembers() {
-        return members;
+        return viewMembers;
     }
 
     @Override
     public Set<Claim> getClaims() {
-        return claims;
+        return viewClaims;
     }
 
     @Override
     public Map<String, MemberRank> getRanks() {
-        return ranks;
+        return viewRanks;
     }
 
     @Override
     public Map<String, SubSociety> getSubSocieties() {
-        return subSocieties;
+        return viewSubSocieties;
     }
 
     @Override
     public Account getAccount() {
         return societies.getEconomyService().getOrCreateAccount(accountName).orElseThrow(IllegalStateException::new);
+    }
+
+    @Override
+    public MemberRankImpl.Builder rankBuilder() {
+        return new MemberRankImpl.Builder(societies, this, null);
+    }
+
+    @Override
+    public ClaimImpl.Builder claimBuilder() {
+        return new ClaimImpl.Builder(societies, this);
+    }
+
+    @Override
+    public SubSocietyImpl.Builder subSocietyBuilder() {
+        return new SubSocietyImpl.Builder(societies, this);
+    }
+
+    @Override
+    public boolean destroy(Cause cause) {
+        if (!societies.queueEvent(new SocietyChangeEventImpl.Destroy(cause, this))) {
+            societies.getSocietiesService().getSocieties(worldUUID).remove(id);
+            societies.getSocietiesService().getAllSocieties(worldUUID).remove(id);
+            return true;
+        }
+        return false;
+    }
+
+    Map<UUID, Member> getMembersRaw() {
+        return members;
+    }
+
+    Set<Claim> getClaimsRaw() {
+        return claims;
+    }
+
+    Map<String, MemberRank> getRanksRaw() {
+        return ranks;
+    }
+
+    Map<String, SubSociety> getSubSocietiesRaw() {
+        return subSocieties;
+    }
+
+    public static class Builder implements Society.Builder {
+        private final Societies societies;
+        private UUID world;
+        private Text name;
+        private Text abbreviatedName;
+
+        public Builder(Societies societies) {
+            this.societies = societies;
+        }
+
+        @Override
+        public Builder world(UUID world) {
+            this.world = world;
+            return this;
+        }
+
+        @Override
+        public Builder name(Text name) {
+            this.name = name;
+            return this;
+        }
+
+        @Override
+        public Builder abbreviatedName(Text abbreviatedName) {
+            this.abbreviatedName = abbreviatedName;
+            return this;
+        }
+
+        @Override
+        public Optional<SocietyImpl> build(Cause cause) {
+            CommonMethods.checkNotNullState(world, "world is mandatory");
+            CommonMethods.checkNotNullState(name, "name is mandatory");
+            CommonMethods.checkNotNullState(abbreviatedName, "abbreviated name is mandatory");
+            SocietyImpl society = new SocietyImpl(this);
+            if (!societies.queueEvent(new SocietyChangeEventImpl.Create(cause, society))) {
+                societies.getSocietiesService().getSocieties(world).put(society.getIdentifier(), society);
+                societies.getSocietiesService().getAllSocieties(world).put(society.getIdentifier(), society);
+                societies.onSocietyModified();
+                return Optional.of(society);
+            }
+            return Optional.empty();
+        }
     }
 }

@@ -19,4 +19,6 @@ public interface SubSocietyChangeEvent extends TaxableChangeEvent {
      * Called when a sub-society is destroyed (i.e. deleted or the society becomes independent)
      */
     interface Destroy extends SubSocietyChangeEvent, TaxableChangeEvent.Destroy {}
+
+    interface ChangePermission extends SubSocietyChangeEvent, PermissionChangeEvent {}
 }

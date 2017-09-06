@@ -25,4 +25,10 @@ public interface SocietiesService {
      * @return The societies as a set.
      */
     Map<String, Society> getAllSocieties(UUID worldUUID);
+
+    /**
+     * Creates a new society builder with this service as the owner.
+     * @return The created builder.
+     */
+    Society.Builder societyBuilder();
 }

@@ -1,9 +1,10 @@
 package io.github.thecrazyphoenix.societies.event;
 
+import io.github.thecrazyphoenix.societies.api.society.Cuboid;
 import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.event.MemberChangeEvent;
-import io.github.thecrazyphoenix.societies.api.land.Claim;
-import io.github.thecrazyphoenix.societies.api.land.MemberClaim;
+import io.github.thecrazyphoenix.societies.api.society.Claim;
+import io.github.thecrazyphoenix.societies.api.society.MemberClaim;
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
@@ -133,6 +134,11 @@ public class MemberChangeEventImpl extends TaxableChangeEventImpl implements Mem
         @Override
         public PermissionState getNewValue() {
             return newValue;
+        }
+
+        @Override
+        public Cuboid getCuboid() {
+            return memberClaim;
         }
     }
 }

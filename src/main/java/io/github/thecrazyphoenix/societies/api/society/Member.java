@@ -2,9 +2,13 @@ package io.github.thecrazyphoenix.societies.api.society;
 
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
-import org.spongepowered.api.entity.living.player.User;
+import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * A member of a society.
@@ -13,9 +17,9 @@ public interface Member extends Taxable, PermissionHolder<MemberPermission> {
     /**
      * Retrieves the user associated with this object.
      * Several Member objects can be associated with the same user.
-     * @return The associated user.
+     * @return The associated user's UUID.
      */
-    User getUser();
+    UUID getUser();
 
     /**
      * Retrieves the rank of this member.
@@ -38,9 +42,57 @@ public interface Member extends Taxable, PermissionHolder<MemberPermission> {
     boolean setTitle(Text newTitle, Cause cause);
 
     /**
-     * Checks whether or not this member is a leader of the society.
-     * Leaders have all permissions in every context except member claims.
-     * @return True if they are a leader, false otherwise.
+     * Attempts to destroy this object.
+     * @param cause The cause of the construction of the object.
+     * @return True if the object was destroyed, false if the event was cancelled.
      */
-    boolean isLeader();
+    boolean destroy(Cause cause);
+
+    /**
+     * Enables the construction of a new object.
+     */
+    interface Builder {
+        /**
+         * Sets the created member's user UUID.
+         * This parameter is mandatory.
+         * @return This object for chaining.
+         */
+        Builder user(UUID user);
+
+        /**
+         * Sets the created member's title.
+         * This parameter defaults to {@link MemberRank#getTitle()} on the rank object.
+         * @return This object for chaining.
+         */
+        Builder title(Text title);
+
+        /**
+         * Sets the created member's fixed tax.
+         * This parameter defaults to {@link BigDecimal#ZERO}
+         * @return This object for chaining.
+         */
+        Builder fixedTax(BigDecimal fixedTax);
+
+        /**
+         * Sets the created member's salary.
+         * This parameter defaults to {@link BigDecimal#ZERO}
+         * @return This object for chaining.
+         */
+        Builder salary(BigDecimal salary);
+
+        /**
+         * Sets the created member's given permission to the given value.
+         * All permissions default to {@link PermissionState#NONE}.
+         * @return This object for chaining.
+         */
+        Builder permission(MemberPermission permission, PermissionState value);
+
+        /**
+         * Constructs and registers the object.
+         * @param cause The cause of the construction of the object.
+         * @return The created object, or {@link Optional#empty()} if the creation event was cancelled.
+         * @throws IllegalStateException If mandatory parameters have not been set.
+         */
+        Optional<? extends Member> build(Cause cause);
+    }
 }

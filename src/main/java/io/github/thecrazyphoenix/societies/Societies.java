@@ -7,7 +7,7 @@ import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.config.ConfigurationPopulator;
 import io.github.thecrazyphoenix.societies.config.SocietySerializer;
 import io.github.thecrazyphoenix.societies.listener.WorldProtectionListener;
-import io.github.thecrazyphoenix.societies.society.MemberImpl;
+import io.github.thecrazyphoenix.societies.society.SocietyImpl;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -21,14 +21,12 @@ import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
 import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
-import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.service.ChangeServiceProviderEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.AsynchronousExecutor;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.service.economy.EconomyService;
-import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 
 import java.io.IOException;
@@ -82,7 +80,7 @@ public class Societies {
             node = societiesDataLoader.load().getNode("societies");
             societies.clear();
             allSocieties.clear();
-            societySerializer.deserializeSocieties(node, societies, allSocieties);
+            societySerializer.deserializeSocieties(node);
         } catch (IOException e) {
             onFailure("Failed to load configuration, {}", e);
         }
@@ -95,10 +93,10 @@ public class Societies {
         game.getEventManager().registerListeners(this, new WorldProtectionListener(this));
     }
 
-    @Listener
+    /*@Listener
     public void OnGameServerStarting(GameStartingServerEvent event) {
         MemberImpl.updateNeeded(game.getServiceManager().provideUnchecked(UserStorageService.class));
-    }
+    }*/
 
     @Listener
     public void onChangeServiceProvider(ChangeServiceProviderEvent event, @Getter("getNewProvider") EconomyService economyService) {
@@ -149,7 +147,7 @@ public class Societies {
 
     private void saveSocieties() {
         ConfigurationNode node = societiesDataLoader.createEmptyNode();
-        societySerializer.serializeSocieties(node, societies, allSocieties);
+        societySerializer.serializeSocieties(node, societies.values().stream().flatMap(m -> m.values().stream()));
         try {
             societiesDataLoader.save(node);
         } catch (IOException e) {
@@ -161,7 +159,7 @@ public class Societies {
     private void injectConfigDir(@ConfigDir(sharedRoot = false) Path configDir) {
         pluginDataLoader = HoconConfigurationLoader.builder().setPath(configDir.resolve(PLUGIN_CONFIG)).build();
         societiesDataLoader = HoconConfigurationLoader.builder().setPath(configDir.resolve(SOCIETIES_CONFIG)).build();
-        societySerializer = new SocietySerializer(logger, this);
+        societySerializer = new SocietySerializer(logger, (SocietiesServiceImpl) societiesService);
         try {
             Files.createDirectories(configDir);
 
@@ -181,7 +179,9 @@ public class Societies {
         }
     }
 
-    private class SocietiesServiceImpl implements SocietiesService {
+    public class SocietiesServiceImpl implements SocietiesService {
+        private SocietiesServiceImpl() {}
+
         @Override
         public Map<String, Society> getSocieties(UUID worldUUID) {
             return societies.computeIfAbsent(worldUUID, k -> new HashMap<>());
@@ -190,6 +190,11 @@ public class Societies {
         @Override
         public Map<String, Society> getAllSocieties(UUID worldUUID) {
             return allSocieties.computeIfAbsent(worldUUID, k -> new HashMap<>());
+        }
+
+        @Override
+        public SocietyImpl.Builder societyBuilder() {
+            return new SocietyImpl.Builder(Societies.this);
         }
     }
 }

@@ -1,15 +1,13 @@
 package io.github.thecrazyphoenix.societies.event;
 
 import io.github.thecrazyphoenix.societies.api.event.MemberRankChangeEvent;
-import io.github.thecrazyphoenix.societies.api.land.Claim;
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
+import io.github.thecrazyphoenix.societies.api.society.Claim;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
-
-import java.util.Optional;
 
 public class MemberRankChangeEventImpl extends TaxableChangeEventImpl implements MemberRankChangeEvent {
     private MemberRank memberRank;
@@ -49,20 +47,6 @@ public class MemberRankChangeEventImpl extends TaxableChangeEventImpl implements
         @Override
         public MemberRank getMemberRank() {
             return memberRank;
-        }
-    }
-
-    public static class ChangeParent extends MemberRankChangeEventImpl implements MemberRankChangeEvent.ChangeParent {
-        private MemberRank newParent;
-
-        public ChangeParent(Cause cause, MemberRank memberRank, MemberRank newParent) {
-            super(cause, memberRank);
-            this.newParent = newParent;
-        }
-
-        @Override
-        public Optional<MemberRank> getNewParent() {
-            return Optional.ofNullable(newParent);
         }
     }
 

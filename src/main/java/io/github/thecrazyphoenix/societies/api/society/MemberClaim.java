@@ -1,9 +1,8 @@
-package io.github.thecrazyphoenix.societies.api.land;
+package io.github.thecrazyphoenix.societies.api.society;
 
-import io.github.thecrazyphoenix.societies.api.society.Member;
-import io.github.thecrazyphoenix.societies.api.society.SocietyElement;
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
+import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import org.spongepowered.api.event.cause.Cause;
 
 import java.util.Map;
@@ -28,12 +27,6 @@ public interface MemberClaim extends SocietyElement, Cuboid {
      * @return True if the modification took place, false otherwise.
      */
     boolean setOwner(Member newOwner, Cause cause);
-
-    /**
-     * Retrieves the claim this member claim is in.
-     * @return The parent of this claim.
-     */
-    Claim getParent();
 
     /**
      * Retrieves the permissions that are used if a member's permission is undefined.
@@ -61,4 +54,39 @@ public interface MemberClaim extends SocietyElement, Cuboid {
      * @param permissions The object holding those permissions. If null, the member will use the default permissions.
      */
     void setPermissions(Member member, PermissionHolder<ClaimPermission> permissions);
+
+    /**
+     * Attempts to destroy this object.
+     * @param cause The cause of the construction of the object.
+     * @return True if the object was destroyed, false if the event was cancelled.
+     */
+    boolean destroy(Cause cause);
+
+    /**
+     * Enables the construction of a new object.
+     */
+    interface Builder extends Cuboid.Builder {
+        /**
+         * Sets the default given permission to the given value for the created member claim.
+         * All permissions default to {@link PermissionState#NONE}.
+         * @return This object for chaining.
+         */
+        Builder defaultPermission(ClaimPermission permission, PermissionState value);
+
+        /**
+         * Sets the given member's given permission to the given value for the created member claim.
+         * All permissions default to {@link PermissionState#NONE}.
+         * @return This object for chaining.
+         */
+        Builder memberPermission(Member member, ClaimPermission permission, PermissionState value);
+
+        /**
+         * Constructs and registers the object.
+         * @param cause The cause of the construction of the object.
+         * @return The created object, or {@link Optional#empty()} if the creation event was cancelled.
+         * @throws IllegalStateException If mandatory parameters have not been set.
+         */
+        @Override
+        Optional<? extends MemberClaim> build(Cause cause);
+    }
 }
