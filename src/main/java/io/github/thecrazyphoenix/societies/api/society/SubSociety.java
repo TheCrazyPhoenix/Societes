@@ -3,15 +3,15 @@ package io.github.thecrazyphoenix.societies.api.society;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.permission.SocietyPermission;
+import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
 import org.spongepowered.api.event.cause.Cause;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 /**
  * Contains information between a society and one of its sub-societies.
  */
-public interface SubSociety extends Taxable, PermissionHolder<SocietyPermission> {
+public interface SubSociety extends AccountHolder, PermissionHolder<SocietyPermission>, SocietyElement {
     /**
      * Retrieves the society wrapped by this object.
      * The owner can be retrieved using {@link #getSociety()}
@@ -36,20 +36,6 @@ public interface SubSociety extends Taxable, PermissionHolder<SocietyPermission>
          * @return This object for chaining.
          */
         Builder subSociety(Society subSociety);
-
-        /**
-         * Sets the created sub-society's fixed tax.
-         * This parameter defaults to {@link BigDecimal#ZERO}
-         * @return This object for chaining.
-         */
-        Builder fixedTax(BigDecimal fixedTax);
-
-        /**
-         * Sets the created sub-society's salary.
-         * This parameter defaults to {@link BigDecimal#ZERO}
-         * @return This object for chaining.
-         */
-        Builder salary(BigDecimal salary);
 
         /**
          * Sets the created sub-society's given permission to the given value.

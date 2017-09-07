@@ -7,7 +7,7 @@ import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import io.github.thecrazyphoenix.societies.event.MemberChangeEventImpl;
-import io.github.thecrazyphoenix.societies.society.internal.AbstractTaxable;
+import io.github.thecrazyphoenix.societies.permission.AbstractPermissionHolder;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
@@ -16,7 +16,7 @@ import org.spongepowered.api.text.Text;
 import java.util.Optional;
 import java.util.UUID;
 
-public class MemberImpl extends AbstractTaxable<MemberPermission> implements Member {
+public class MemberImpl extends AbstractPermissionHolder<MemberPermission> implements Member {
     private UUID user;
     private MemberRankImpl rank;
     private Text title;
@@ -73,14 +73,14 @@ public class MemberImpl extends AbstractTaxable<MemberPermission> implements Mem
         return new MemberChangeEventImpl.ChangePermission(cause, this, permission, newState);
     }
 
-    public static class Builder extends AbstractTaxable.Builder<Builder, MemberPermission> implements Member.Builder {
+    public static class Builder extends AbstractPermissionHolder.Builder<Builder, MemberPermission> implements Member.Builder {
         private final Societies societies;
         private final MemberRankImpl rank;
         private UUID user;
         private Text title;
 
         Builder(Societies societies, MemberRankImpl rank) {
-            super(societies, rank.getSociety(), rank, rank);
+            super(societies, rank.getSociety(), rank);
             this.societies = societies;
             this.rank = rank;
         }
@@ -100,7 +100,6 @@ public class MemberImpl extends AbstractTaxable<MemberPermission> implements Mem
         @Override
         public Optional<MemberImpl> build(Cause cause) {
             CommonMethods.checkNotNullState(user, "user is mandatory");
-            super.build();
             MemberImpl member = new MemberImpl(this);
             if (!societies.queueEvent(new MemberChangeEventImpl.Create(cause, member))) {
                 rank.getSociety().getMembersRaw().put(user, member);

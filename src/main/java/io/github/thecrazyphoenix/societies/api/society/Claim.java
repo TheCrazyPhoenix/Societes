@@ -3,6 +3,7 @@ package io.github.thecrazyphoenix.societies.api.society;
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
+import io.github.thecrazyphoenix.societies.api.society.economy.ContractAuthority;
 import org.spongepowered.api.event.cause.Cause;
 
 import java.math.BigDecimal;
@@ -13,7 +14,7 @@ import java.util.Set;
 /**
  * Models a claim owned by a society.
  */
-public interface Claim extends SocietyElement, ClaimedLand {
+public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
     /**
      * Retrieves the cuboids that make up this claim.
      * The cuboids may overlap.
@@ -81,7 +82,7 @@ public interface Claim extends SocietyElement, ClaimedLand {
      * Retrieves the land tax paid by members who own land in this claim.
      * @return The land tax rate per block per day.
      */
-    BigDecimal getLandTax();
+    BigDecimal getLandTax();    // TODO Add multiple currencies support to land tax and land value
 
     /**
      * Sets the land tax.

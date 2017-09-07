@@ -9,10 +9,11 @@ import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
+import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
-public class MemberChangeEventImpl extends TaxableChangeEventImpl implements MemberChangeEvent {
+public class MemberChangeEventImpl extends SocietyElementChangeEventImpl implements MemberChangeEvent {
     private Member member;
 
     public MemberChangeEventImpl(Cause cause, Member member) {
@@ -25,31 +26,20 @@ public class MemberChangeEventImpl extends TaxableChangeEventImpl implements Mem
         return member;
     }
 
-    public static class Create extends TaxableChangeEventImpl.Create implements MemberChangeEvent.Create {
-        private Member member;
+    @Override
+    public AccountHolder getAccountHolder() {
+        return member;
+    }
 
+    public static class Create extends MemberChangeEventImpl implements MemberChangeEvent.Create {
         public Create(Cause cause, Member member) {
             super(cause, member);
-            this.member = member;
-        }
-
-        @Override
-        public Member getMember() {
-            return member;
         }
     }
 
-    public static class Destroy extends TaxableChangeEventImpl.Destroy implements MemberChangeEvent.Destroy {
-        private Member member;
-
+    public static class Destroy extends MemberChangeEventImpl implements MemberChangeEvent.Destroy {
         public Destroy(Cause cause, Member member) {
             super(cause, member);
-            this.member = member;
-        }
-
-        @Override
-        public Member getMember() {
-            return member;
         }
     }
 

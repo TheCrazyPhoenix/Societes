@@ -1,8 +1,8 @@
 package io.github.thecrazyphoenix.societies.api.event;
 
-import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
+import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import org.spongepowered.api.text.Text;
 
@@ -10,9 +10,9 @@ import org.spongepowered.api.text.Text;
  * Base event for when a member is created (i.e. joins), is destroyed (i.e. leaves), changes rank, changes permissions (except through inheritance)
  * Tax and salary change will not trigger this event.
  *
- * @see TaxableChangeEvent
+ * @see AccountHolderChangeEvent
  */
-public interface MemberChangeEvent extends TaxableChangeEvent {
+public interface MemberChangeEvent extends AccountHolderChangeEvent, SocietyElementChangeEvent {
     /**
      * Retrieves the member modified by this event.
      * This object represents the member before its modified state, except for the {@link Create} event.
@@ -23,12 +23,12 @@ public interface MemberChangeEvent extends TaxableChangeEvent {
     /**
      * Called when a member is created, i.e. when a player joins a society.
      */
-    interface Create extends MemberChangeEvent, TaxableChangeEvent.Create {}
+    interface Create extends MemberChangeEvent, AccountHolderChangeEvent.Create {}
 
     /**
      * Called when a member is destroyed, i.e. when a player leaves a society, be it by choice or by force.
      */
-    interface Destroy extends MemberChangeEvent, TaxableChangeEvent.Destroy {}
+    interface Destroy extends MemberChangeEvent, AccountHolderChangeEvent.Destroy {}
 
     /**
      * Called when a member's rank is changed.

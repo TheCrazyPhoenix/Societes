@@ -15,7 +15,6 @@ import io.github.thecrazyphoenix.societies.api.society.MemberClaim;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.api.society.SubSociety;
-import io.github.thecrazyphoenix.societies.api.society.Taxable;
 import io.github.thecrazyphoenix.societies.society.ClaimImpl;
 import io.github.thecrazyphoenix.societies.society.CuboidImpl;
 import io.github.thecrazyphoenix.societies.society.MemberClaimImpl;
@@ -23,7 +22,6 @@ import io.github.thecrazyphoenix.societies.society.MemberImpl;
 import io.github.thecrazyphoenix.societies.society.MemberRankImpl;
 import io.github.thecrazyphoenix.societies.society.SocietyImpl;
 import io.github.thecrazyphoenix.societies.society.SubSocietyImpl;
-import io.github.thecrazyphoenix.societies.society.internal.AbstractTaxable;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -37,6 +35,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -54,12 +53,13 @@ public class SocietySerializer {
 
     private static final String TITLE_KEY = "title";
     private static final String DESCRIPTION_KEY = "description";
+    private static final String CURRENCY_KEY = "currency";
+    private static final String AMOUNT_KEY = "amount";
+    private static final String INTERVAL_KEY = "interval";
     private static final String CHILDREN_KEY = "children";
 
     private static final String UUID_KEY = "uuid";
-
-    private static final String FIXED_TAX_KEY = "fixed-tax";
-    private static final String SALARY_KEY = "salary";
+    private static final String CONTRACTS_KEY = "contracts";
     private static final String PERMISSIONS_KEY = "permissions";
 
     private static final String CUBOIDS_KEY = "cuboids";
@@ -87,7 +87,7 @@ public class SocietySerializer {
         this.societies = societies;
     }
 
-    public void serializeSocieties(ConfigurationNode node, Stream<Society> societies) {
+    public void serializeSocieties(ConfigurationNode node, Stream<Society> societies) {     // TODO Serialize and deserialize contracts
         Map<Society, ConfigurationNode> incomplete = new HashMap<>();
         Map<Society, ConfigurationNode> buffer = new HashMap<>();
         societies.forEach(s -> serializeSocietyFull(s, node.getAppendedNode(), incomplete));
@@ -215,7 +215,6 @@ public class SocietySerializer {
     }
 
     private void serializeSubSociety(SubSociety subSociety, ConfigurationNode node, Map<Society, ConfigurationNode> incomplete) throws ObjectMappingException {
-        serializeTaxable(subSociety, node);
         serializePermissions(subSociety, node.getNode("permissions"), SocietyPermission.values());
         incomplete.put(subSociety.toSociety(), node.getNode(SOCIETY_KEY));
     }
@@ -226,7 +225,6 @@ public class SocietySerializer {
         SocietyImpl society = societyBuilder.build(null).get();
         incomplete.put(society, node.getNode(SOCIETY_KEY));
         builder.subSociety(society);
-        deserializeTaxable(builder, node);
         deserializePermissions(builder::permission, node.getNode(PERMISSIONS_KEY), SocietyPermission::valueOf);
     }
 
@@ -295,13 +293,15 @@ public class SocietySerializer {
     private void serializeRank(MemberRank rank, final ConfigurationNode node) throws ObjectMappingException {
         node.getNode(TITLE_KEY).setValue(TEXT_TOKEN, rank.getTitle());
         node.getNode(DESCRIPTION_KEY).setValue(TEXT_TOKEN, rank.getDescription());
-        serializeTaxable(rank, node);
+        // TODO Serialize payments
         serializePermissions(rank, node.getNode(PERMISSIONS_KEY), MemberPermission.values());
     }
 
     private void deserializeRank(MemberRankImpl.Builder builder, ConfigurationNode node) throws ObjectMappingException {
         builder.title(node.getNode(TITLE_KEY).getValue(TEXT_TOKEN)).description(node.getNode(DESCRIPTION_KEY).getValue(TEXT_TOKEN));
-        deserializeTaxable(builder, node);
+        for (ConfigurationNode child : node.getNode(CONTRACTS_KEY).getChildrenList()) {
+            builder.addPayment(child.getNode(NAME_KEY).getString(), child.getNode(CURRENCY_KEY).getString(), child.getNode(AMOUNT_KEY).getValue(BIG_DECIMAL_TOKEN), child.getNode(INTERVAL_KEY).getLong(), TimeUnit.MILLISECONDS);
+        }
         deserializePermissions(builder::permission, node.getNode(PERMISSIONS_KEY), MemberPermission::valueOf);
     }
 
@@ -310,24 +310,12 @@ public class SocietySerializer {
         if (member.getTitle() == member.getRank().getTitle()) {
             node.getNode(TITLE_KEY).setValue(TEXT_TOKEN, member.getTitle());
         }
-        serializeTaxable(member, node);
         serializePermissions(member, node.getNode(PERMISSIONS_KEY), MemberPermission.values());
     }
 
     private void deserializeMember(MemberImpl.Builder builder, ConfigurationNode node) throws ObjectMappingException {
         builder.user(node.getNode(UUID_KEY).getValue(UUID_TOKEN)).title(node.getNode(TITLE_KEY).getValue(TEXT_TOKEN));
-        deserializeTaxable(builder, node);
         deserializePermissions(builder::permission, node.getNode(PERMISSIONS_KEY), MemberPermission::valueOf);
-    }
-
-    private void serializeTaxable(Taxable taxable, ConfigurationNode node) throws ObjectMappingException {
-        node.getNode(FIXED_TAX_KEY).setValue(BIG_DECIMAL_TOKEN, taxable.getFixedTax());
-        node.getNode(SALARY_KEY).setValue(BIG_DECIMAL_TOKEN, taxable.getSalary());
-    }
-
-    private void deserializeTaxable(AbstractTaxable.Builder<?, ?> builder, ConfigurationNode node) throws ObjectMappingException {
-        builder.salary(node.getNode(SALARY_KEY).getValue(BIG_DECIMAL_TOKEN));
-        builder.fixedTax(node.getNode(FIXED_TAX_KEY).getValue(BIG_DECIMAL_TOKEN));
     }
 
     private <T extends Enum<T>> void serializePermissions(PermissionHolder<T> holder, ConfigurationNode node, T[] values) {

@@ -9,7 +9,7 @@ import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
-public class MemberRankChangeEventImpl extends TaxableChangeEventImpl implements MemberRankChangeEvent {
+public class MemberRankChangeEventImpl extends SocietyElementChangeEventImpl implements MemberRankChangeEvent {
     private MemberRank memberRank;
 
     public MemberRankChangeEventImpl(Cause cause, MemberRank memberRank) {
@@ -22,31 +22,15 @@ public class MemberRankChangeEventImpl extends TaxableChangeEventImpl implements
         return memberRank;
     }
 
-    public static class Create extends TaxableChangeEventImpl.Create implements MemberRankChangeEvent.Create {
-        private MemberRank memberRank;
-
+    public static class Create extends MemberRankChangeEventImpl implements MemberRankChangeEvent.Create {
         public Create(Cause cause, MemberRank memberRank) {
             super(cause, memberRank);
-            this.memberRank = memberRank;
-        }
-
-        @Override
-        public MemberRank getMemberRank() {
-            return memberRank;
         }
     }
 
-    public static class Destroy extends TaxableChangeEventImpl.Destroy implements MemberRankChangeEvent.Destroy {
-        private MemberRank memberRank;
-
+    public static class Destroy extends MemberRankChangeEventImpl implements MemberRankChangeEvent.Destroy {
         public Destroy(Cause cause, MemberRank memberRank) {
             super(cause, memberRank);
-            this.memberRank = memberRank;
-        }
-
-        @Override
-        public MemberRank getMemberRank() {
-            return memberRank;
         }
     }
 

@@ -10,20 +10,28 @@ import io.github.thecrazyphoenix.societies.api.society.Cuboid;
 import io.github.thecrazyphoenix.societies.api.society.MemberClaim;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import io.github.thecrazyphoenix.societies.api.society.SubSociety;
+import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
+import io.github.thecrazyphoenix.societies.api.society.economy.Contract;
 import io.github.thecrazyphoenix.societies.event.ClaimChangeEventImpl;
 import io.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
 import io.github.thecrazyphoenix.societies.society.internal.SocietyElementImpl;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.service.economy.Currency;
+import org.spongepowered.api.service.economy.transaction.TransferResult;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 public class ClaimImpl extends SocietyElementImpl implements Claim {
     private PermissionHolder<ClaimPermission> defaultPermissions;
@@ -189,6 +197,11 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
         return inter1.min(inter2).equals(inter1) ? CommonMethods.getVolume(inter1, inter2) : 0L;
     }
 
+    @Override
+    public Collection<Contract> getContracts(AccountHolder accountHolder) {
+        return Collections.singleton(new ImposedContract(accountHolder, landTax.multiply(BigDecimal.valueOf(memberClaims.stream().filter(c -> c.getOwner().orElse(null) == accountHolder).mapToLong(MemberClaim::getClaimedVolume).sum()))));
+    }
+
     public static class Builder implements Claim.Builder {
         private final Societies societies;
         private final SocietyImpl society;
@@ -251,6 +264,66 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
 
         public SocietyImpl getSociety() {
             return society;
+        }
+    }
+
+    private class ImposedContract implements Contract {
+        private AccountHolder sender;
+        private BigDecimal amount;
+
+        private ImposedContract(AccountHolder sender, BigDecimal amount) {
+            this.sender = sender;
+            this.amount = amount;
+        }
+
+        @Override
+        public String getName() {
+            return "Land Tax";
+        }
+
+        @Override
+        public AccountHolder getSender() {
+            return sender;
+        }
+
+        @Override
+        public AccountHolder getReceiver() {
+            return society;
+        }
+
+        @Override
+        public Currency getCurrency() {
+            return societies.getEconomyService().getDefaultCurrency();
+        }
+
+        @Override
+        public BigDecimal getAmount() {
+            return amount;
+        }
+
+        @Override
+        public long getInterval() {
+            return TimeUnit.DAYS.toMillis(1L);
+        }
+
+        @Override
+        public BooleanSupplier getTransferCondition() {
+            return () -> true;
+        }
+
+        @Override
+        public BooleanSupplier getExistenceCondition() {
+            return () -> true;
+        }
+
+        @Override
+        public Consumer<TransferResult> getTransferCallback() {
+            return result -> {};
+        }
+
+        @Override
+        public boolean destroy(Cause cause) {
+            return false;
         }
     }
 }

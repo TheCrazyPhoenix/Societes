@@ -1,7 +1,8 @@
 package io.github.thecrazyphoenix.societies.api.society;
 
+import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
+import io.github.thecrazyphoenix.societies.api.society.economy.ContractAuthority;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
 
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.UUID;
 /**
  * Models a society.
  */
-public interface Society {
+public interface Society extends AccountHolder, ContractAuthority {
     /**
      * Retrieves the world of this society.
      * @return The UUID of the world this society exists in.
@@ -63,12 +64,6 @@ public interface Society {
      * @return The sub-societies as an unmodifiable string-indexed map.
      */
     Map<String, SubSociety> getSubSocieties();
-
-    /**
-     * Retrieves this society's account.
-     * @return The account as an Account.
-     */
-    Account getAccount();
 
     /**
      * Creates a new rank builder with this society as the owner.

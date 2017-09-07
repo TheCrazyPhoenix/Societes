@@ -3,11 +3,11 @@ package io.github.thecrazyphoenix.societies.event;
 import io.github.thecrazyphoenix.societies.api.event.SubSocietyChangeEvent;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.permission.SocietyPermission;
+import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
 import io.github.thecrazyphoenix.societies.api.society.SubSociety;
-import io.github.thecrazyphoenix.societies.api.society.Taxable;
 import org.spongepowered.api.event.cause.Cause;
 
-public class SubSocietyChangeEventImpl extends TaxableChangeEventImpl implements SubSocietyChangeEvent {
+public class SubSocietyChangeEventImpl extends SocietyElementChangeEventImpl implements SubSocietyChangeEvent {
     private SubSociety subSociety;
 
     public SubSocietyChangeEventImpl(Cause cause, SubSociety subSociety) {
@@ -20,25 +20,20 @@ public class SubSocietyChangeEventImpl extends TaxableChangeEventImpl implements
         return subSociety;
     }
 
+    @Override
+    public AccountHolder getAccountHolder() {
+        return subSociety;
+    }
+
     public static class Create extends SubSocietyChangeEventImpl implements SubSocietyChangeEvent.Create {
         public Create(Cause cause, SubSociety society) {
             super(cause, society);
-        }
-
-        @Override
-        public Taxable getTaxable() {
-            return getSubSociety();
         }
     }
 
     public static class Destroy extends SubSocietyChangeEventImpl implements SubSocietyChangeEvent.Destroy {
         public Destroy(Cause cause, SubSociety society) {
             super(cause, society);
-        }
-
-        @Override
-        public Taxable getTaxable() {
-            return getSubSociety();
         }
     }
 

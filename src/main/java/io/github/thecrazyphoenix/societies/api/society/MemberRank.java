@@ -3,20 +3,22 @@ package io.github.thecrazyphoenix.societies.api.society;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
+import io.github.thecrazyphoenix.societies.api.society.economy.ContractAuthority;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.service.economy.account.Account;
+import org.spongepowered.api.service.economy.Currency;
 import org.spongepowered.api.text.Text;
 
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Stores the default values for a player's rank.
  * This shouldn't be used to get a Member's values, instead, use the equivalent method in {@link Member}
  */
-public interface MemberRank extends Taxable, PermissionHolder<MemberPermission> {
+public interface MemberRank extends ContractAuthority, PermissionHolder<MemberPermission>, SocietyElement {
     /**
      * Retrieves the unique identifier of this member rank.
      * @return The identifier as a string.
@@ -72,6 +74,8 @@ public interface MemberRank extends Taxable, PermissionHolder<MemberPermission> 
      */
     boolean setDescription(Text newDescription, Cause cause);
 
+    // TODO Add method to view and edit the payments
+
     /**
      * Creates a new rank builder with this rank as the parent.
      * @return The created builder.
@@ -92,11 +96,6 @@ public interface MemberRank extends Taxable, PermissionHolder<MemberPermission> 
      */
     boolean destroy(Cause cause);
 
-    @Override
-    default Account getAccount() {
-        throw new UnsupportedOperationException("attempt to get member rank account");
-    }
-
     /**
      * Enables the construction of a new object.
      */
@@ -116,18 +115,15 @@ public interface MemberRank extends Taxable, PermissionHolder<MemberPermission> 
         Builder description(Text description);
 
         /**
-         * Sets the created rank's fixed tax.
-         * This parameter defaults to {@link BigDecimal#ZERO}
+         * Adds the given arguments to the list of contracts to impose upon each member with this rank.
+         * @param name The name of the transfer.
+         * @param currency The currency of the transfer.
+         * @param amount The amount to transfer from the society to the member (negative to have the member transfer to the society).
+         * @param interval The interval of the transfer.
+         * @param unit The unit of the interval.
          * @return This object for chaining.
          */
-        Builder fixedTax(BigDecimal fixedTax);
-
-        /**
-         * Sets the created rank's salary.
-         * This parameter defaults to {@link BigDecimal#ZERO}
-         * @return This object for chaining.
-         */
-        Builder salary(BigDecimal salary);
+        Builder addPayment(String name, Currency currency, BigDecimal amount, long interval, TimeUnit unit);
 
         /**
          * Sets the created rank's given permission to the given value.

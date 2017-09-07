@@ -6,12 +6,15 @@ import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.api.society.SubSociety;
+import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
+import io.github.thecrazyphoenix.societies.api.society.economy.Contract;
 import io.github.thecrazyphoenix.societies.event.SocietyChangeEventImpl;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
 import org.spongepowered.api.text.Text;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -135,6 +138,11 @@ public class SocietyImpl implements Society {
         return subSocieties;
     }
 
+    @Override
+    public Collection<Contract> getContracts(AccountHolder accountHolder) {
+        return Collections.emptySet();
+    }
+
     public static class Builder implements Society.Builder {
         private final Societies societies;
         private UUID world;
@@ -170,8 +178,8 @@ public class SocietyImpl implements Society {
             CommonMethods.checkNotNullState(abbreviatedName, "abbreviated name is mandatory");
             SocietyImpl society = new SocietyImpl(this);
             if (!societies.queueEvent(new SocietyChangeEventImpl.Create(cause, society))) {
-                societies.getSocietiesService().getSocieties(world).put(society.getIdentifier(), society);
-                societies.getSocietiesService().getAllSocieties(world).put(society.getIdentifier(), society);
+                societies.getRootSocieties(world).put(society.getIdentifier(), society);
+                societies.getAllSocieties(world).put(society.getIdentifier(), society);
                 societies.onSocietyModified();
                 return Optional.of(society);
             }

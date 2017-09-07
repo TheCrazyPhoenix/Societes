@@ -8,7 +8,7 @@ import org.spongepowered.api.text.Text;
 /**
  * Base event for when a member rank's title, description or permissions change.
  */
-public interface MemberRankChangeEvent extends TaxableChangeEvent {
+public interface MemberRankChangeEvent extends SocietyElementChangeEvent {
     /**
      * Retrieves the member rank affected by this event.
      * This will always represent the old state of the member rank, except for the {@link Create} event.
@@ -19,12 +19,12 @@ public interface MemberRankChangeEvent extends TaxableChangeEvent {
     /**
      * Called when a member rank is created.
      */
-    interface Create extends MemberRankChangeEvent, TaxableChangeEvent.Create {}
+    interface Create extends MemberRankChangeEvent, SocietyElementChangeEvent.Create {}
 
     /**
      * Called when a member rank is destroyed.
      */
-    interface Destroy extends MemberRankChangeEvent, TaxableChangeEvent.Destroy {}
+    interface Destroy extends MemberRankChangeEvent, SocietyElementChangeEvent.Destroy {}
 
     /**
      * Called when a member rank's title is changed.

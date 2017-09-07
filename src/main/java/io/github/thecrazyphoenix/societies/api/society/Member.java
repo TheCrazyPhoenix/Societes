@@ -3,17 +3,17 @@ package io.github.thecrazyphoenix.societies.api.society;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
+import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
  * A member of a society.
  */
-public interface Member extends Taxable, PermissionHolder<MemberPermission> {
+public interface Member extends AccountHolder, PermissionHolder<MemberPermission>, SocietyElement {
     /**
      * Retrieves the user associated with this object.
      * Several Member objects can be associated with the same user.
@@ -65,20 +65,6 @@ public interface Member extends Taxable, PermissionHolder<MemberPermission> {
          * @return This object for chaining.
          */
         Builder title(Text title);
-
-        /**
-         * Sets the created member's fixed tax.
-         * This parameter defaults to {@link BigDecimal#ZERO}
-         * @return This object for chaining.
-         */
-        Builder fixedTax(BigDecimal fixedTax);
-
-        /**
-         * Sets the created member's salary.
-         * This parameter defaults to {@link BigDecimal#ZERO}
-         * @return This object for chaining.
-         */
-        Builder salary(BigDecimal salary);
 
         /**
          * Sets the created member's given permission to the given value.

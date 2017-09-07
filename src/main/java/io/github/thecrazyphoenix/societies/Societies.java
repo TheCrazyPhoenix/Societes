@@ -2,12 +2,14 @@ package io.github.thecrazyphoenix.societies;
 
 import com.google.inject.Inject;
 import io.github.thecrazyphoenix.societies.api.SocietiesService;
-import io.github.thecrazyphoenix.societies.api.event.SocietyChangeEvent;
 import io.github.thecrazyphoenix.societies.api.society.Society;
+import io.github.thecrazyphoenix.societies.api.society.economy.Contract;
+import io.github.thecrazyphoenix.societies.api.society.economy.ContractAuthority;
 import io.github.thecrazyphoenix.societies.config.ConfigurationPopulator;
 import io.github.thecrazyphoenix.societies.config.SocietySerializer;
 import io.github.thecrazyphoenix.societies.listener.WorldProtectionListener;
 import io.github.thecrazyphoenix.societies.society.SocietyImpl;
+import io.github.thecrazyphoenix.societies.society.economy.ContractImpl;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -16,6 +18,7 @@ import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
@@ -33,9 +36,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Plugin(id = Societies.PLUGIN_ID)
@@ -61,6 +69,7 @@ public class Societies {
 
     private Map<UUID, Map<String, Society>> societies;     // TODO Add more saving options
     private Map<UUID, Map<String, Society>> allSocieties;
+    private Collection<Contract> contracts;
     private boolean continueAfterFailure;
 
     private boolean societiesLoaded;
@@ -69,6 +78,7 @@ public class Societies {
         societiesService = new SocietiesServiceImpl();
         societies = new HashMap<>();
         allSocieties = new HashMap<>();
+        contracts = new ArrayList<>();
     }
 
     @Listener
@@ -118,7 +128,7 @@ public class Societies {
         return game.getServer().getPlayer(uuid);
     }
 
-    public boolean queueEvent(SocietyChangeEvent event) {
+    public boolean queueEvent(Event event) {
         return societiesLoaded && game.getEventManager().post(event);
     }
 
@@ -128,6 +138,18 @@ public class Societies {
 
     public EconomyService getEconomyService() {
         return economyService;
+    }
+
+    public Map<String, Society> getRootSocieties(UUID world) {
+        return societies.computeIfAbsent(world, k -> new HashMap<>());
+    }
+
+    public Map<String, Society> getAllSocieties(UUID world) {
+        return allSocieties.computeIfAbsent(world, k -> new HashMap<>());
+    }
+
+    public Collection<Contract> getContracts() {
+        return contracts;
     }
 
     private void onFailure(String log, final Exception e) {
@@ -180,21 +202,50 @@ public class Societies {
     }
 
     public class SocietiesServiceImpl implements SocietiesService {
-        private SocietiesServiceImpl() {}
+        private Set<ContractAuthority> authorities;
+
+        private SocietiesServiceImpl() {
+            authorities = new HashSet<>();
+        }
 
         @Override
         public Map<String, Society> getSocieties(UUID worldUUID) {
-            return societies.computeIfAbsent(worldUUID, k -> new HashMap<>());
+            return Collections.unmodifiableMap(societies.computeIfAbsent(worldUUID, k -> new HashMap<>()));
         }
 
         @Override
         public Map<String, Society> getAllSocieties(UUID worldUUID) {
-            return allSocieties.computeIfAbsent(worldUUID, k -> new HashMap<>());
+            return Collections.unmodifiableMap(allSocieties.computeIfAbsent(worldUUID, k -> new HashMap<>()));
+        }
+
+        @Override
+        public Collection<Contract> getContracts() {
+            return contracts;
+        }
+
+        @Override
+        public Set<ContractAuthority> getAuthorities() {
+            return authorities;
+        }
+
+        @Override
+        public void addAuthority(ContractAuthority authority) {
+            authorities.add(authority);
+        }
+
+        @Override
+        public void removeAuthority(ContractAuthority authority) {
+            authorities.remove(authority);
         }
 
         @Override
         public SocietyImpl.Builder societyBuilder() {
             return new SocietyImpl.Builder(Societies.this);
+        }
+
+        @Override
+        public Contract.Builder contractBuilder() {
+            return new ContractImpl.Builder(Societies.this);
         }
     }
 }
