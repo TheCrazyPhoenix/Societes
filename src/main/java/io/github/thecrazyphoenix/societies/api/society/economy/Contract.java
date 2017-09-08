@@ -1,17 +1,18 @@
 package io.github.thecrazyphoenix.societies.api.society.economy;
 
+import io.github.thecrazyphoenix.societies.api.func.UnorderedPair;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.Currency;
-import org.spongepowered.api.service.economy.transaction.TransferResult;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
+import java.util.function.BiFunction;
 
 /**
  * Models a money transfer between two AccountHolders at a fixed time interval.
+ * Transfers caused by a contract must have a cause where the first object is the contract.
  */
 public interface Contract {     // TODO Add events related to the new contract API.
     /**
@@ -22,29 +23,10 @@ public interface Contract {     // TODO Add events related to the new contract A
     String getName();
 
     /**
-     * Retrieves the AccountHolder that sends the amount.
-     * @return The sender.
-     */
-    AccountHolder getSender();
-
-    /**
-     * Retrieves the AccountHolder that receives the amount.
-     * @return The receiver.
-     */
-    AccountHolder getReceiver();
-
-    /**
      * Retrieves the currency this contract deals in.
      * @return The currency.
      */
     Currency getCurrency();
-
-    /**
-     * Retrieves the amount transferred between the AccountHolders associated by this contract.
-     * A negative amount indicates that the sender is receiving money from the receiver.
-     * @return The amount as a BigDecimal.
-     */
-    BigDecimal getAmount();
 
     /**
      * Retrieves the time interval at which the amount is transferred between the AccountHolders.
@@ -53,24 +35,18 @@ public interface Contract {     // TODO Add events related to the new contract A
     long getInterval();
 
     /**
-     * Retrieves the condition that determines whether a payment should be made.
-     * This condition is checked just before each transfer. If it is false, the transfer is skipped.
-     * @return The condition as a BooleanSupplier.
+     * Retrieves the amount transferred between the given AccountHolders.
+     * A negative amount indicates that the sender is receiving money from the receiver.
+     * {@code getAmount(a, b)} must equal {@code getAmount(b, a).negate()} when called in the same tick.
+     * @return The amount as a BigDecimal.
      */
-    BooleanSupplier getTransferCondition();
+    BigDecimal getAmount(AccountHolder sender, AccountHolder receiver);
 
     /**
-     * Retrieves the condition that determines whether this contract should continue existing.
-     * This condition is checked just before the transfer condition. If it is false, an attempt is made to destroy this contract and, if successful, transfers caused by this contract will no longer take place.
-     * @return The condition as a BooleanSupplier.
+     * Retrieves the pairs of AccountHolders for which {@link #getAmount(AccountHolder, AccountHolder)} does not return {@link BigDecimal#ZERO}
+     * @return The pairs as an unmodifiable set of unordered pairs.
      */
-    BooleanSupplier getExistenceCondition();
-
-    /**
-     * Retrieves the callback that is called after each transfer.
-     * @return The callback as a Consumer of TransferResult.
-     */
-    Consumer<TransferResult> getTransferCallback();
+    Set<UnorderedPair<AccountHolder, AccountHolder>> getApplicablePairs();
 
     /**
      * Attempts to destroy this object.
@@ -79,7 +55,7 @@ public interface Contract {     // TODO Add events related to the new contract A
      */
     boolean destroy(Cause cause);
 
-    interface Builder {
+    interface Builder {     // Currently unused, probably never will be used.
         /**
          * Sets the created contract's name.
          * This parameter is mandatory.
@@ -88,32 +64,11 @@ public interface Contract {     // TODO Add events related to the new contract A
         Builder name(String name);
 
         /**
-         * Sets the created contract's sender.
-         * This parameter is mandatory.
-         * @return This object for chaining.
-         */
-        Builder sender(AccountHolder sender);
-
-        /**
-         * Sets the created contract's receiver.
-         * This parameter is mandatory.
-         * @return This object for chaining.
-         */
-        Builder receiver(AccountHolder receiver);
-
-        /**
          * Sets the created contract's currency.
          * This parameter is mandatory.
          * @return This object for chaining.
          */
         Builder currency(Currency currency);
-
-        /**
-         * Sets the created contract's amount.
-         * This parameter is mandatory.
-         * @return This object for chaining.
-         */
-        Builder amount(BigDecimal amount);
 
         /**
          * Sets the created contract's interval.
@@ -124,24 +79,11 @@ public interface Contract {     // TODO Add events related to the new contract A
         Builder interval(long interval, TimeUnit unit);
 
         /**
-         * Sets the created contract's transfer condition.
-         * Defaults to {@code () -> true}.
+         * Sets the created contract's amount. The first AccountHolder is the sender and the second is the receiver.
+         * This parameter is mandatory.
          * @return This object for chaining.
          */
-        Builder transferCondition(BooleanSupplier transferCondition);
-
-        /**
-         * Sets the created contract's existance condition.
-         * Defaults to {@code () -> true}.
-         * @return This object for chaining.
-         */
-        Builder existenceCondition(BooleanSupplier existenceCondition);
-        /**
-         * Sets the created contract's transfer callback.
-         * Defaults to {@code result -> {}}.
-         * @return This object for chaining.
-         */
-        Builder transferCallback(Consumer<TransferResult> transferCallback);
+        Builder amount(BiFunction<AccountHolder, AccountHolder, BigDecimal> amount);
 
         /**
          * Constructs and registers the object.

@@ -26,6 +26,7 @@ import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
+import org.spongepowered.api.service.economy.Currency;
 import org.spongepowered.api.text.Text;
 
 import java.math.BigDecimal;
@@ -229,8 +230,12 @@ public class SocietySerializer {
     }
 
     private void serializeClaim(Claim claim, ConfigurationNode node) throws ObjectMappingException {
-        node.getNode(LAND_TAX_KEY).setValue(BIG_DECIMAL_TOKEN, claim.getLandTax());
-        node.getNode(LAND_VALUE_KEY).setValue(BIG_DECIMAL_TOKEN, claim.getLandValue());
+        for (Map.Entry<Currency, BigDecimal> entry : claim.getLandTax().entrySet()) {
+            node.getNode(LAND_TAX_KEY, entry.getKey().getId()).setValue(BIG_DECIMAL_TOKEN, entry.getValue());
+        }
+        for (Map.Entry<Currency, BigDecimal> entry : claim.getLandValue().entrySet()) {
+            node.getNode(LAND_VALUE_KEY, entry.getKey().getId()).setValue(BIG_DECIMAL_TOKEN, entry.getValue());
+        }
         serializePermissions(claim.getDefaultPermissions(), node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission.values());
         for (Cuboid cuboid : claim.getClaimCuboids()) {
             serializeCuboid(cuboid, node.getNode(CUBOIDS_KEY).getAppendedNode());
@@ -248,7 +253,12 @@ public class SocietySerializer {
 
     @SuppressWarnings("SuspiciousMethodCalls")
     private void deserializeClaim(ClaimImpl.Builder builder, ConfigurationNode node) throws ObjectMappingException {
-        builder.landTax(node.getNode(LAND_TAX_KEY).getValue(BIG_DECIMAL_TOKEN)).landValue(node.getNode(LAND_VALUE_KEY).getValue(BIG_DECIMAL_TOKEN));
+        for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.getNode(LAND_TAX_KEY).getChildrenMap().entrySet()) {
+            builder.landTax((String) entry.getKey(), entry.getValue().getValue(BIG_DECIMAL_TOKEN));
+        }
+        for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.getNode(LAND_VALUE_KEY).getChildrenMap().entrySet()) {
+            builder.landValue((String) entry.getKey(), entry.getValue().getValue(BIG_DECIMAL_TOKEN));
+        }
         deserializePermissions(builder::defaultPermission, node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission::valueOf);
         for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.getNode(MEMBER_PERMISSIONS_KEY).getChildrenMap().entrySet()) {
             MemberRank rank = builder.getSociety().getRanks().get(entry.getKey());

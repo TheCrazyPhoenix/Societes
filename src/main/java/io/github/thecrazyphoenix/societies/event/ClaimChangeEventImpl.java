@@ -3,6 +3,7 @@ package io.github.thecrazyphoenix.societies.event;
 import io.github.thecrazyphoenix.societies.api.event.ClaimChangeEvent;
 import io.github.thecrazyphoenix.societies.api.society.Claim;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.service.economy.Currency;
 
 import java.math.BigDecimal;
 
@@ -46,29 +47,43 @@ public class ClaimChangeEventImpl extends SocietyElementChangeEventImpl implemen
     }
 
     public static class ChangeLandValue extends ClaimChangeEventImpl implements ClaimChangeEvent.ChangeLandValue {
+        private Currency currency;
         private BigDecimal newLandValue;
 
-        public ChangeLandValue(Cause cause, Claim claim, BigDecimal newLandValue) {
+        public ChangeLandValue(Cause cause, Claim claim, Currency currency, BigDecimal newLandValue) {
             super(cause, claim);
+            this.currency = currency;
             this.newLandValue = newLandValue;
         }
 
         @Override
-        public BigDecimal newLandValue() {
+        public Currency getCurrency() {
+            return currency;
+        }
+
+        @Override
+        public BigDecimal getNewLandValue() {
             return newLandValue;
         }
     }
 
     public static class ChangeLandTax extends ClaimChangeEventImpl implements ClaimChangeEvent.ChangeLandTax {
+        private Currency currency;
         private BigDecimal newLandTax;
 
-        public ChangeLandTax(Cause cause, Claim claim, BigDecimal newLandTax) {
+        public ChangeLandTax(Cause cause, Claim claim, Currency currency, BigDecimal newLandTax) {
             super(cause, claim);
+            this.currency = currency;
             this.newLandTax = newLandTax;
         }
 
         @Override
-        public BigDecimal newLandTax() {
+        public Currency getCurrency() {
+            return currency;
+        }
+
+        @Override
+        public BigDecimal getNewLandTax() {
             return newLandTax;
         }
     }

@@ -1,6 +1,7 @@
 package io.github.thecrazyphoenix.societies.api.event;
 
 import io.github.thecrazyphoenix.societies.api.society.Claim;
+import org.spongepowered.api.service.economy.Currency;
 
 import java.math.BigDecimal;
 
@@ -41,10 +42,16 @@ public interface ClaimChangeEvent extends SocietyElementChangeEvent {
      */
     interface ChangeLandValue extends ClaimChangeEvent {
         /**
+         * Retrieves the currency whose land value was changed.
+         * @return The affected currency.
+         */
+        Currency getCurrency();
+
+        /**
          * Retrieves the new land value of the claim.
          * @return The new land value per block.
          */
-        BigDecimal newLandValue();
+        BigDecimal getNewLandValue();
     }
 
     /**
@@ -52,9 +59,15 @@ public interface ClaimChangeEvent extends SocietyElementChangeEvent {
      */
     interface ChangeLandTax extends ClaimChangeEvent {
         /**
+         * Retrieves the currency whose land tax was changed.
+         * @return The affected currency.
+         */
+        Currency getCurrency();
+
+        /**
          * Retrieves the new land tax rate of the claim.
          * @return The new land tax rate per block per day
          */
-        BigDecimal newLandTax();
+        BigDecimal getNewLandTax();
     }
 }

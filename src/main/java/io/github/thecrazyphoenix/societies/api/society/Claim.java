@@ -5,6 +5,7 @@ import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.society.economy.ContractAuthority;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.service.economy.Currency;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -80,32 +81,34 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
 
     /**
      * Retrieves the land tax paid by members who own land in this claim.
-     * @return The land tax rate per block per day.
+     * @return The land tax rate per block per day as an unmodifiable currency-indexed map.
      */
-    BigDecimal getLandTax();    // TODO Add multiple currencies support to land tax and land value
+    Map<Currency, BigDecimal> getLandTax();
 
     /**
-     * Sets the land tax.
+     * Sets the land tax for the given currency.
+     * @param currency The currency whose tax value to set.
      * @param value The rate per block per day to set it to.
      * @param cause The cause of this modification.
      * @return True if the modification took place, false otherwise.
      */
-    boolean setLandTax(BigDecimal value, Cause cause);
+    boolean setLandTax(Currency currency, BigDecimal value, Cause cause);
 
     /**
      * Retrieves the cost of buying land in this claim.
      * This defines the value of member claims.
-     * @return The land value per block.
+     * @return The land value per block as an unmodifiable currency-indexed.
      */
-    BigDecimal getLandValue();
+    Map<Currency, BigDecimal> getLandValue();
 
     /**
-     * Sets the land value.
+     * Sets the land value for the given currency.
+     * @param currency The currency whose tax value to set.
      * @param value The value per block to set it to.
      * @param cause The cause of this modification.
      * @return True if the modification took place, false otherwise.
      */
-    boolean setLandValue(BigDecimal value, Cause cause);
+    boolean setLandValue(Currency currency, BigDecimal value, Cause cause);
 
     /**
      * Creates a new member claim builder with this claim as the parent.
@@ -131,18 +134,18 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
      */
     interface Builder {
         /**
-         * Sets the created claim's land tax.
+         * Sets the land tax value for the given currency.
          * This parameter defaults to {@link BigDecimal#ZERO}
          * @return This object for chaining.
          */
-        Builder landTax(BigDecimal landTax);
+        Builder landTax(Currency currency, BigDecimal landTax);
 
         /**
          * Sets the created claim's land value.
          * This parameter defaults to {@link BigDecimal#ZERO}
          * @return This object for chaining.
          */
-        Builder landValue(BigDecimal landValue);
+        Builder landValue(Currency currency, BigDecimal landValue);
 
         /**
          * Sets the default given permission to the given value for the created claim.

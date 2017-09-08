@@ -15,14 +15,13 @@ import io.github.thecrazyphoenix.societies.api.society.economy.Contract;
 import io.github.thecrazyphoenix.societies.event.ClaimChangeEventImpl;
 import io.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
+import io.github.thecrazyphoenix.societies.society.economy.VariableContract;
 import io.github.thecrazyphoenix.societies.society.internal.SocietyElementImpl;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.Currency;
-import org.spongepowered.api.service.economy.transaction.TransferResult;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,10 +29,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class ClaimImpl extends SocietyElementImpl implements Claim {
+    private static final String TAX_NAME = "Land Tax";
+    private static final long TAX_INTERVAL = TimeUnit.DAYS.toMillis(1L);
+
     private PermissionHolder<ClaimPermission> defaultPermissions;
     private Map<MemberRank, PermissionHolder<ClaimPermission>> memberRankPermissions;
     private Map<SubSociety, PermissionHolder<ClaimPermission>> subSocietyPermissions;
@@ -45,8 +46,10 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
     private Set<Cuboid> viewCuboids;
     private Set<MemberClaim> viewMemberClaims;
 
-    private BigDecimal landTax;
-    private BigDecimal landValue;
+    private Map<String, BigDecimal> landTax;
+    private Map<String, BigDecimal> landValue;
+    private Set<Contract> contracts;
+    private Set<Contract> viewContracts;
 
     private ClaimImpl(Builder builder) {
         super(builder.societies, builder.society);
@@ -57,8 +60,9 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
         builder.subSocietyPermissions.forEach((s, m) -> subSocietyPermissions.put(s, CommonMethods.mapToHolder(societies, society, PowerlessPermissionHolder.CLAIM, m)));
         viewCuboids = Collections.unmodifiableSet(cuboids = new HashSet<>());
         viewMemberClaims = Collections.unmodifiableSet(memberClaims = new HashSet<>());
-        landTax = builder.landTax;
-        landValue = builder.landValue;
+        landTax = new HashMap<>(builder.landTax);
+        landValue = new HashMap<>(builder.landValue);
+        viewContracts = Collections.unmodifiableSet(contracts = builder.landTax.entrySet().stream().map(e -> new VariableContract(societies, TAX_NAME, e.getKey(), TAX_INTERVAL, h -> getLandTax(h, e.getKey()), society.getMembers().values(), cause -> false)).collect(Collectors.toSet()));
     }
 
     @Override
@@ -108,14 +112,21 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
     }
 
     @Override
-    public BigDecimal getLandTax() {
-        return landTax;
+    public Map<Currency, BigDecimal> getLandTax() {
+        Map<Currency, BigDecimal> result = landTax.entrySet().stream().collect(Collectors.toMap(e -> societies.getEconomyService().getCurrencies().stream().filter(c -> c.getId().equalsIgnoreCase(e.getKey())).findAny().orElse(null), Map.Entry::getValue));
+        result.remove(null);        // Ignore missing currencies
+        return result;
     }
 
     @Override
-    public boolean setLandTax(BigDecimal value, Cause cause) {
-        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandTax(cause, this, value))) {
-            landTax = value;
+    public boolean setLandTax(Currency currency, BigDecimal value, Cause cause) {
+        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandTax(cause, this, currency, value))) {
+            if (BigDecimal.ZERO.equals(value)) {
+                contracts.removeIf(c -> c.getCurrency() == currency);
+                landTax.remove(currency.getId());
+            } else if (landTax.put(currency.getId(), value) == null) {
+                contracts.add(new VariableContract(societies, TAX_NAME, currency.getId(), TAX_INTERVAL, h -> getLandTax(h, currency.getId()), society.getMembers().values(), c -> false));
+            }
             societies.onSocietyModified();
             return true;
         }
@@ -123,14 +134,20 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
     }
 
     @Override
-    public BigDecimal getLandValue() {
-        return landValue;
+    public Map<Currency, BigDecimal> getLandValue() {
+        Map<Currency, BigDecimal> result = landValue.entrySet().stream().collect(Collectors.toMap(e -> societies.getEconomyService().getCurrencies().stream().filter(c -> c.getId().equalsIgnoreCase(e.getKey())).findAny().orElse(null), Map.Entry::getValue));
+        result.remove(null);        // Ignore missing currencies
+        return result;
     }
 
     @Override
-    public boolean setLandValue(BigDecimal value, Cause cause) {
-        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandValue(cause, this, value))) {
-            landValue = value;
+    public boolean setLandValue(Currency currency, BigDecimal value, Cause cause) {
+        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandValue(cause, this, currency, value))) {
+            if (BigDecimal.ZERO.equals(value)) {
+                landValue.remove(currency.getId());
+            } else {
+                landValue.put(currency.getId(), value);
+            }
             societies.onSocietyModified();
             return true;
         }
@@ -198,15 +215,19 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
     }
 
     @Override
-    public Collection<Contract> getContracts(AccountHolder accountHolder) {
-        return Collections.singleton(new ImposedContract(accountHolder, landTax.multiply(BigDecimal.valueOf(memberClaims.stream().filter(c -> c.getOwner().orElse(null) == accountHolder).mapToLong(MemberClaim::getClaimedVolume).sum()))));
+    public Set<Contract> getContracts() {
+        return viewContracts;
+    }
+
+    private BigDecimal getLandTax(AccountHolder receiver, String currency) {
+        return landTax.get(currency).multiply(BigDecimal.valueOf(-memberClaims.stream().filter(c -> c.getOwner().orElse(null) == receiver).mapToLong(MemberClaim::getClaimedVolume).sum()));
     }
 
     public static class Builder implements Claim.Builder {
         private final Societies societies;
         private final SocietyImpl society;
-        private BigDecimal landTax;
-        private BigDecimal landValue;
+        private Map<String, BigDecimal> landTax;
+        private Map<String, BigDecimal> landValue;
         private Map<ClaimPermission, PermissionState> defaultPermissions;
         private Map<MemberRank, Map<ClaimPermission, PermissionState>> memberRankPermissions;
         private Map<SubSociety, Map<ClaimPermission, PermissionState>> subSocietyPermissions;
@@ -214,20 +235,30 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
         Builder(Societies societies, SocietyImpl society) {
             this.societies = societies;
             this.society = society;
+            landTax = new HashMap<>();
+            landValue = new HashMap<>();
             defaultPermissions = new HashMap<>();
             memberRankPermissions = new HashMap<>();
             subSocietyPermissions = new HashMap<>();
         }
 
         @Override
-        public Builder landTax(BigDecimal landTax) {
-            this.landTax = landTax;
+        public Builder landTax(Currency currency, BigDecimal landTax) {
+            return landTax(currency.getId(), landTax);
+        }
+
+        public Builder landTax(String currency, BigDecimal landTax) {
+            this.landTax.put(currency, landTax);
             return this;
         }
 
         @Override
-        public Builder landValue(BigDecimal landValue) {
-            this.landValue = landValue;
+        public Builder landValue(Currency currency, BigDecimal landValue) {
+            return landValue(currency.getId(), landValue);
+        }
+
+        public Builder landValue(String currency, BigDecimal landValue) {
+            this.landValue.put(currency, landValue);
             return this;
         }
 
@@ -251,8 +282,6 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
 
         @Override
         public Optional<ClaimImpl> build(Cause cause) {
-            landTax = CommonMethods.orDefault(landTax, BigDecimal.ZERO);
-            landValue = CommonMethods.orDefault(landValue, BigDecimal.ZERO);
             ClaimImpl claim = new ClaimImpl(this);
             if (!societies.queueEvent(new ClaimChangeEventImpl.Create(cause, claim))) {
                 society.getClaimsRaw().add(claim);
@@ -264,66 +293,6 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
 
         public SocietyImpl getSociety() {
             return society;
-        }
-    }
-
-    private class ImposedContract implements Contract {
-        private AccountHolder sender;
-        private BigDecimal amount;
-
-        private ImposedContract(AccountHolder sender, BigDecimal amount) {
-            this.sender = sender;
-            this.amount = amount;
-        }
-
-        @Override
-        public String getName() {
-            return "Land Tax";
-        }
-
-        @Override
-        public AccountHolder getSender() {
-            return sender;
-        }
-
-        @Override
-        public AccountHolder getReceiver() {
-            return society;
-        }
-
-        @Override
-        public Currency getCurrency() {
-            return societies.getEconomyService().getDefaultCurrency();
-        }
-
-        @Override
-        public BigDecimal getAmount() {
-            return amount;
-        }
-
-        @Override
-        public long getInterval() {
-            return TimeUnit.DAYS.toMillis(1L);
-        }
-
-        @Override
-        public BooleanSupplier getTransferCondition() {
-            return () -> true;
-        }
-
-        @Override
-        public BooleanSupplier getExistenceCondition() {
-            return () -> true;
-        }
-
-        @Override
-        public Consumer<TransferResult> getTransferCallback() {
-            return result -> {};
-        }
-
-        @Override
-        public boolean destroy(Cause cause) {
-            return false;
         }
     }
 }

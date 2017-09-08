@@ -3,13 +3,11 @@ package io.github.thecrazyphoenix.societies;
 import com.google.inject.Inject;
 import io.github.thecrazyphoenix.societies.api.SocietiesService;
 import io.github.thecrazyphoenix.societies.api.society.Society;
-import io.github.thecrazyphoenix.societies.api.society.economy.Contract;
 import io.github.thecrazyphoenix.societies.api.society.economy.ContractAuthority;
 import io.github.thecrazyphoenix.societies.config.ConfigurationPopulator;
 import io.github.thecrazyphoenix.societies.config.SocietySerializer;
 import io.github.thecrazyphoenix.societies.listener.WorldProtectionListener;
 import io.github.thecrazyphoenix.societies.society.SocietyImpl;
-import io.github.thecrazyphoenix.societies.society.economy.ContractImpl;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -36,7 +34,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,7 +66,7 @@ public class Societies {
 
     private Map<UUID, Map<String, Society>> societies;     // TODO Add more saving options
     private Map<UUID, Map<String, Society>> allSocieties;
-    private Collection<Contract> contracts;
+    private Set<ContractAuthority> authorities;
     private boolean continueAfterFailure;
 
     private boolean societiesLoaded;
@@ -78,7 +75,7 @@ public class Societies {
         societiesService = new SocietiesServiceImpl();
         societies = new HashMap<>();
         allSocieties = new HashMap<>();
-        contracts = new ArrayList<>();
+        authorities = new HashSet<>();
     }
 
     @Listener
@@ -102,11 +99,6 @@ public class Societies {
         game.getServiceManager().setProvider(this, SocietiesService.class, new SocietiesServiceImpl());
         game.getEventManager().registerListeners(this, new WorldProtectionListener(this));
     }
-
-    /*@Listener
-    public void OnGameServerStarting(GameStartingServerEvent event) {
-        MemberImpl.updateNeeded(game.getServiceManager().provideUnchecked(UserStorageService.class));
-    }*/
 
     @Listener
     public void onChangeServiceProvider(ChangeServiceProviderEvent event, @Getter("getNewProvider") EconomyService economyService) {
@@ -148,8 +140,8 @@ public class Societies {
         return allSocieties.computeIfAbsent(world, k -> new HashMap<>());
     }
 
-    public Collection<Contract> getContracts() {
-        return contracts;
+    public Collection<ContractAuthority> getAuthorities() {
+        return authorities;
     }
 
     private void onFailure(String log, final Exception e) {
@@ -202,7 +194,6 @@ public class Societies {
     }
 
     public class SocietiesServiceImpl implements SocietiesService {
-        private Set<ContractAuthority> authorities;
 
         private SocietiesServiceImpl() {
             authorities = new HashSet<>();
@@ -219,16 +210,6 @@ public class Societies {
         }
 
         @Override
-        public Collection<Contract> getContracts() {
-            return contracts;
-        }
-
-        @Override
-        public Set<ContractAuthority> getAuthorities() {
-            return authorities;
-        }
-
-        @Override
         public void addAuthority(ContractAuthority authority) {
             authorities.add(authority);
         }
@@ -241,11 +222,6 @@ public class Societies {
         @Override
         public SocietyImpl.Builder societyBuilder() {
             return new SocietyImpl.Builder(Societies.this);
-        }
-
-        @Override
-        public Contract.Builder contractBuilder() {
-            return new ContractImpl.Builder(Societies.this);
         }
     }
 }

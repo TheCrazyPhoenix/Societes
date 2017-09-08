@@ -6,16 +6,15 @@ import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
-import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
 import io.github.thecrazyphoenix.societies.api.society.economy.Contract;
 import io.github.thecrazyphoenix.societies.event.MemberRankChangeEventImpl;
 import io.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.AbstractPermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
+import io.github.thecrazyphoenix.societies.society.economy.FixedContract;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.Currency;
-import org.spongepowered.api.service.economy.transaction.TransferResult;
 import org.spongepowered.api.text.Text;
 
 import java.math.BigDecimal;
@@ -25,10 +24,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> implements MemberRank {
@@ -41,7 +39,8 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
     private Map<UUID, Member> members;
     private Map<String, MemberRank> viewChildren;
     private Map<UUID, Member> viewMembers;
-    private Collection<ContractData> contracts;
+    private Set<Contract> contracts;
+    private Set<Contract> viewContracts;
 
     private MemberRankImpl(Builder builder) {
         super(builder);
@@ -50,7 +49,7 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
         description = builder.description;
         viewChildren = Collections.unmodifiableMap(children = new HashMap<>());
         viewMembers = Collections.unmodifiableMap(members = new HashMap<>());
-        contracts = builder.contracts;
+        viewContracts = Collections.unmodifiableSet(contracts = builder.contracts.stream().map(d -> new FixedContract(societies, society, d.name, d.currency, d.interval, d.amount, members.values(), cause -> false)).collect(Collectors.toSet()));
     }
 
     @Override
@@ -141,8 +140,8 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
     }
 
     @Override
-    public Collection<Contract> getContracts(AccountHolder accountHolder) {
-        return Collections.unmodifiableCollection(contracts.stream().map(d -> new ImposedContract(d, accountHolder)).collect(Collectors.toList()));
+    public Set<Contract> getContracts() {
+        return viewContracts;
     }
 
     public static class Builder extends AbstractPermissionHolder.Builder<Builder, MemberPermission> implements MemberRank.Builder {
@@ -175,12 +174,12 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
 
         @Override
         public MemberRank.Builder addPayment(String name, Currency currency, BigDecimal amount, long interval, TimeUnit unit) {
-            contracts.add(new ContractData(name, currency, amount, interval, unit));
+            addPayment(name, currency.getId(), amount, interval, unit);
             return this;
         }
 
         public MemberRank.Builder addPayment(String name, String currency, BigDecimal amount, long interval, TimeUnit unit) {
-            // TODO Configuration-phase addPayment (to later resolve String->Currency as EconomyService isn't yet available, perhaps using a fake currency, keeping the currency IDs internally, and changing the reference whenever the economy service changes).
+            contracts.add(new ContractData(name, currency, amount, interval, unit));
             return this;
         }
 
@@ -203,75 +202,15 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
 
     private static class ContractData {
         private String name;
-        private Currency currency;
+        private String currency;
         private BigDecimal amount;
         private long interval;
 
-        private ContractData(String name, Currency currency, BigDecimal amount, long interval, TimeUnit intervalUnit) {
+        private ContractData(String name, String currency, BigDecimal amount, long interval, TimeUnit intervalUnit) {
             this.name = name;
             this.currency = currency;
             this.amount = amount;
             this.interval = intervalUnit.toMillis(interval);
-        }
-    }
-
-    private class ImposedContract implements Contract {
-        private ContractData data;
-        private AccountHolder receiver;
-
-        private ImposedContract(ContractData data, AccountHolder receiver) {
-            this.data = data;
-            this.receiver = receiver;
-        }
-
-        @Override
-        public String getName() {
-            return data.name;
-        }
-
-        @Override
-        public AccountHolder getSender() {
-            return society;
-        }
-
-        @Override
-        public AccountHolder getReceiver() {
-            return receiver;
-        }
-
-        @Override
-        public Currency getCurrency() {
-            return data.currency;
-        }
-
-        @Override
-        public BigDecimal getAmount() {
-            return data.amount;
-        }
-
-        @Override
-        public long getInterval() {
-            return data.interval;
-        }
-
-        @Override
-        public BooleanSupplier getTransferCondition() {
-            return () -> true;
-        }
-
-        @Override
-        public BooleanSupplier getExistenceCondition() {
-            return () -> true;
-        }
-
-        @Override
-        public Consumer<TransferResult> getTransferCallback() {
-            return result -> {};
-        }
-
-        @Override
-        public boolean destroy(Cause cause) {
-            return false;
         }
     }
 }
