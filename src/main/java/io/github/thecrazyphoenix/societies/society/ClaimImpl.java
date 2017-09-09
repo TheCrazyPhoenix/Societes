@@ -62,7 +62,7 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
         viewMemberClaims = Collections.unmodifiableSet(memberClaims = new HashSet<>());
         landTax = new HashMap<>(builder.landTax);
         landValue = new HashMap<>(builder.landValue);
-        viewContracts = Collections.unmodifiableSet(contracts = builder.landTax.entrySet().stream().map(e -> new VariableContract(societies, TAX_NAME, e.getKey(), TAX_INTERVAL, h -> getLandTax(h, e.getKey()), society.getMembers().values(), cause -> false)).collect(Collectors.toSet()));
+        viewContracts = Collections.unmodifiableSet(contracts = builder.landTax.entrySet().stream().map(e -> new VariableContract(societies, society, TAX_NAME, e.getKey(), TAX_INTERVAL, h -> getLandTax(h, e.getKey()), society.getMembers().values())).collect(Collectors.toSet()));
     }
 
     @Override
@@ -125,7 +125,7 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
                 contracts.removeIf(c -> c.getCurrency() == currency);
                 landTax.remove(currency.getId());
             } else if (landTax.put(currency.getId(), value) == null) {
-                contracts.add(new VariableContract(societies, TAX_NAME, currency.getId(), TAX_INTERVAL, h -> getLandTax(h, currency.getId()), society.getMembers().values(), c -> false));
+                contracts.add(new VariableContract(societies, society, TAX_NAME, currency.getId(), TAX_INTERVAL, h -> getLandTax(h, currency.getId()), society.getMembers().values()));
             }
             societies.onSocietyModified();
             return true;

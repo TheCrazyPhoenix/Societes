@@ -113,8 +113,9 @@ public class SocietyImpl implements Society {
     @Override
     public boolean destroy(Cause cause) {
         if (!societies.queueEvent(new SocietyChangeEventImpl.Destroy(cause, this))) {
-            societies.getSocietiesService().getSocieties(worldUUID).remove(id);
-            societies.getSocietiesService().getAllSocieties(worldUUID).remove(id);
+            societies.getRootSocieties(worldUUID).remove(id);
+            societies.getAllSocieties(worldUUID).remove(id);
+            societies.getSocietiesService().removeAuthority(this);
             return true;
         }
         return false;
@@ -178,6 +179,7 @@ public class SocietyImpl implements Society {
             if (!societies.queueEvent(new SocietyChangeEventImpl.Create(cause, society))) {
                 societies.getRootSocieties(world).put(society.getIdentifier(), society);
                 societies.getAllSocieties(world).put(society.getIdentifier(), society);
+                societies.getSocietiesService().addAuthority(society);
                 societies.onSocietyModified();
                 return Optional.of(society);
             }

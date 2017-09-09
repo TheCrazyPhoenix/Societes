@@ -88,7 +88,7 @@ public class SocietySerializer {
         this.societies = societies;
     }
 
-    public void serializeSocieties(ConfigurationNode node, Stream<Society> societies) {     // TODO Serialize and deserialize contracts
+    public void serializeSocieties(ConfigurationNode node, Stream<Society> societies) {
         Map<Society, ConfigurationNode> incomplete = new HashMap<>();
         Map<Society, ConfigurationNode> buffer = new HashMap<>();
         societies.forEach(s -> serializeSocietyFull(s, node.getAppendedNode(), incomplete));
@@ -230,10 +230,10 @@ public class SocietySerializer {
     }
 
     private void serializeClaim(Claim claim, ConfigurationNode node) throws ObjectMappingException {
-        for (Map.Entry<Currency, BigDecimal> entry : claim.getLandTax().entrySet()) {
+        for (Map.Entry<? extends Currency, ? extends BigDecimal> entry : claim.getLandTax().entrySet()) {
             node.getNode(LAND_TAX_KEY, entry.getKey().getId()).setValue(BIG_DECIMAL_TOKEN, entry.getValue());
         }
-        for (Map.Entry<Currency, BigDecimal> entry : claim.getLandValue().entrySet()) {
+        for (Map.Entry<? extends Currency, ? extends BigDecimal> entry : claim.getLandValue().entrySet()) {
             node.getNode(LAND_VALUE_KEY, entry.getKey().getId()).setValue(BIG_DECIMAL_TOKEN, entry.getValue());
         }
         serializePermissions(claim.getDefaultPermissions(), node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission.values());
@@ -243,10 +243,10 @@ public class SocietySerializer {
         for (MemberClaim memberClaim : claim.getMemberClaims()) {
             serializeMemberClaim(memberClaim, node.getNode(MEMBER_CLAIMS_KEY).getAppendedNode());
         }
-        for (Map.Entry<MemberRank, PermissionHolder<ClaimPermission>> entry : claim.getMemberRankPermissions().entrySet()) {
+        for (Map.Entry<? extends MemberRank, ? extends PermissionHolder<ClaimPermission>> entry : claim.getMemberRankPermissions().entrySet()) {
             serializePermissions(entry.getValue(), node.getNode(MEMBER_PERMISSIONS_KEY, entry.getKey().getIdentifier()), ClaimPermission.values());
         }
-        for (Map.Entry<SubSociety, PermissionHolder<ClaimPermission>> entry : claim.getSubSocietyPermissions().entrySet()) {
+        for (Map.Entry<? extends SubSociety, ? extends PermissionHolder<ClaimPermission>> entry : claim.getSubSocietyPermissions().entrySet()) {
             serializePermissions(entry.getValue(), node.getNode(SOCIETY_PERMISSIONS_KEY, entry.getKey().toSociety().getIdentifier()), ClaimPermission.values());
         }
     }
@@ -271,13 +271,13 @@ public class SocietySerializer {
     }
 
     private void serializeMemberClaim(MemberClaim memberClaim, ConfigurationNode node) throws ObjectMappingException {
-        Optional<Member> owner = memberClaim.getOwner();
+        Optional<? extends Member> owner = memberClaim.getOwner();
         if (owner.isPresent()) {
             node.getNode(OWNER_KEY).setValue(UUID_TOKEN, owner.get().getUser());
         }
         serializeCuboid(memberClaim, node);
         serializePermissions(memberClaim.getDefaultPermissions(), node.getNode(DEFAULT_PERMISSIONS_KEY), ClaimPermission.values());
-        for (Map.Entry<Member, PermissionHolder<ClaimPermission>> entry : memberClaim.getMemberPermissions().entrySet()) {
+        for (Map.Entry<? extends Member, ? extends PermissionHolder<ClaimPermission>> entry : memberClaim.getMemberPermissions().entrySet()) {
             serializePermissions(entry.getValue(), node.getNode(MEMBER_PERMISSIONS_KEY, entry.getKey().getUser()), ClaimPermission.values());
         }
     }
@@ -303,7 +303,13 @@ public class SocietySerializer {
     private void serializeRank(MemberRank rank, final ConfigurationNode node) throws ObjectMappingException {
         node.getNode(TITLE_KEY).setValue(TEXT_TOKEN, rank.getTitle());
         node.getNode(DESCRIPTION_KEY).setValue(TEXT_TOKEN, rank.getDescription());
-        // TODO Serialize payments
+        for (MemberRank.RankContract contract : rank.getContracts()) {
+            ConfigurationNode child = node.getNode(CONTRACTS_KEY).getAppendedNode();
+            child.getNode(NAME_KEY).setValue(contract.getName());
+            child.getNode(CURRENCY_KEY).setValue(contract.getCurrency().getId());
+            child.getNode(AMOUNT_KEY).setValue(BIG_DECIMAL_TOKEN, contract.getAmount());
+            child.getNode(INTERVAL_KEY).setValue(contract.getInterval());
+        }
         serializePermissions(rank, node.getNode(PERMISSIONS_KEY), MemberPermission.values());
     }
 

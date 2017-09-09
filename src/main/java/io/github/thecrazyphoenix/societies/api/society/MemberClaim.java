@@ -17,7 +17,7 @@ public interface MemberClaim extends SocietyElement, Cuboid {
      * Retrieves the owner of this claim.
      * @return The owner if this claim is owned, {@link Optional#empty()} otherwise.
      */
-    Optional<Member> getOwner();
+    Optional<? extends Member> getOwner();
 
     /**
      * Sets this member claim's new owner.
@@ -39,13 +39,13 @@ public interface MemberClaim extends SocietyElement, Cuboid {
      * @param member The member whose permissions to retrieve. The member must belong to the same society as this object.
      * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, otherwise {@link Optional#empty()}.
      */
-    Optional<PermissionHolder<ClaimPermission>> getPermissions(Member member);
+    Optional<? extends PermissionHolder<ClaimPermission>> getPermissions(Member member);
 
     /**
      * Retrieves all the permissions associated with members.
      * @return The permissions as an unmodifiable member-indexed map of permission holders of claim permissions.
      */
-    Map<Member, PermissionHolder<ClaimPermission>> getMemberPermissions();
+    Map<? extends Member, ? extends PermissionHolder<ClaimPermission>> getMemberPermissions();
 
     /**
      * Sets the given member's permissions.

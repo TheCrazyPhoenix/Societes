@@ -4,7 +4,6 @@ import io.github.thecrazyphoenix.societies.Societies;
 import io.github.thecrazyphoenix.societies.api.func.UnorderedPair;
 import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
 import io.github.thecrazyphoenix.societies.func.UnorderedPairImpl;
-import org.spongepowered.api.event.cause.Cause;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -17,8 +16,9 @@ public class VariableContract extends AbstractContract {
     private Function<AccountHolder, BigDecimal> amount;
     private Collection<? extends AccountHolder> applicable;
 
-    public VariableContract(Societies societies, String name, String currency, long interval, Function<AccountHolder, BigDecimal> amount, Collection<? extends AccountHolder> applicable, Function<Cause, Boolean> onDestroy) {
-        super(societies, name, currency, interval, onDestroy);
+    public VariableContract(Societies societies, AccountHolder sender, String name, String currency, long interval, Function<AccountHolder, BigDecimal> amount, Collection<? extends AccountHolder> applicable) {
+        super(societies, name, currency, interval);
+        this.sender = sender;
         this.amount = amount;
         this.applicable = applicable;
     }
@@ -31,10 +31,5 @@ public class VariableContract extends AbstractContract {
     @Override
     public Set<UnorderedPair<AccountHolder, AccountHolder>> getApplicablePairs() {
         return applicable.stream().<UnorderedPair<AccountHolder, AccountHolder>>map(h -> new UnorderedPairImpl<>(sender, h)).collect(Collectors.toSet());
-    }
-
-    @Override
-    public boolean destroy(Cause cause) {
-        return false;
     }
 }

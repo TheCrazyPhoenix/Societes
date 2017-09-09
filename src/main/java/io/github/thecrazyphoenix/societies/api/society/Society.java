@@ -44,26 +44,26 @@ public interface Society extends AccountHolder, ContractAuthority {
      * Retrieves the members of this society. This includes the leaders.
      * @return The members as an unmodifiable UUID-indexed map.
      */
-    Map<UUID, Member> getMembers();
+    Map<UUID, ? extends Member> getMembers();
 
     /**
      * Retrieves the claims owned by this society.
      * If this society is a sub-society, these claims will be in the claims of the parent society.
      * @return The claims as an unmodifiable set.
      */
-    Set<Claim> getClaims();
+    Set<? extends Claim> getClaims();
 
     /**
      * Retrieves the available ranks of this society.
      * @return The ranks as an unmodifiable string-indexed map.
      */
-    Map<String, MemberRank> getRanks();
+    Map<String, ? extends MemberRank> getRanks();
 
     /**
      * Retrieves the societies directly under this society's authority. Indirect sub-societies are not included.
      * @return The sub-societies as an unmodifiable string-indexed map.
      */
-    Map<String, SubSociety> getSubSocieties();
+    Map<String, ? extends SubSociety> getSubSocieties();
 
     /**
      * Creates a new rank builder with this society as the owner.

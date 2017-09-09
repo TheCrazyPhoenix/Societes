@@ -6,12 +6,11 @@ import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
-import io.github.thecrazyphoenix.societies.api.society.economy.Contract;
 import io.github.thecrazyphoenix.societies.event.MemberRankChangeEventImpl;
 import io.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.AbstractPermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
-import io.github.thecrazyphoenix.societies.society.economy.FixedContract;
+import io.github.thecrazyphoenix.societies.society.economy.MutableFixedContract;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.Currency;
@@ -39,8 +38,8 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
     private Map<UUID, Member> members;
     private Map<String, MemberRank> viewChildren;
     private Map<UUID, Member> viewMembers;
-    private Set<Contract> contracts;
-    private Set<Contract> viewContracts;
+    private Set<RankContract> contracts;
+    private Set<RankContract> viewContracts;
 
     private MemberRankImpl(Builder builder) {
         super(builder);
@@ -49,7 +48,7 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
         description = builder.description;
         viewChildren = Collections.unmodifiableMap(children = new HashMap<>());
         viewMembers = Collections.unmodifiableMap(members = new HashMap<>());
-        viewContracts = Collections.unmodifiableSet(contracts = builder.contracts.stream().map(d -> new FixedContract(societies, society, d.name, d.currency, d.interval, d.amount, members.values(), cause -> false)).collect(Collectors.toSet()));
+        viewContracts = Collections.unmodifiableSet(contracts = builder.contracts.stream().map(d -> new RankContract(d.name, d.currency, d.interval, d.amount)).collect(Collectors.toSet()));
     }
 
     @Override
@@ -105,6 +104,18 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
     }
 
     @Override
+    public Set<? extends RankContract> getContracts() {
+        return viewContracts;
+    }
+
+    @Override
+    public RankContract addContract(String name, Currency currency, BigDecimal amount, long interval, TimeUnit unit) {
+        RankContract contract = new RankContract(name, currency.getId(), unit.toMillis(interval), amount);
+        contracts.add(contract);
+        return contract;
+    }
+
+    @Override
     public Builder rankBuilder() {
         return new Builder(societies, society, this);
     }
@@ -121,6 +132,7 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
             if (parent != null) {
                 parent.getChildrenRaw().remove(id);
             }
+            societies.getSocietiesService().removeAuthority(this);
             return true;
         }
         return false;
@@ -139,9 +151,25 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
         return members;
     }
 
-    @Override
-    public Set<Contract> getContracts() {
-        return viewContracts;
+    public class RankContract extends MutableFixedContract implements MemberRank.RankContract {
+        public RankContract(String name, String currency, long interval, BigDecimal amount) {
+            super(MemberRankImpl.this.societies, MemberRankImpl.this.society, name, currency, interval, amount, viewMembers.values(), contracts::remove);
+        }
+
+        @Override
+        public BigDecimal getAmount() {
+            return amount;
+        }
+
+        @Override
+        public void setAmount(BigDecimal amount) {
+            this.amount = amount;
+        }
+
+        @Override
+        public MemberRank getRank() {
+            return MemberRankImpl.this;
+        }
     }
 
     public static class Builder extends AbstractPermissionHolder.Builder<Builder, MemberPermission> implements MemberRank.Builder {
@@ -193,6 +221,7 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
                 if (parent != null) {
                     parent.getChildrenRaw().put(memberRank.getIdentifier(), memberRank);
                 }
+                societies.getSocietiesService().addAuthority(memberRank);
                 societies.onSocietyModified();
                 return Optional.of(memberRank);
             }

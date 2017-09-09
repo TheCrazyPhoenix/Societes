@@ -94,7 +94,7 @@ public class WorldProtectionListener {
 
     private void checkLocation(UUID uuid, Location<World> location, Function<PermissionHolder<ClaimPermission>, Boolean> hasPermission, Runnable cancel) {
         Claim claim = null;
-        Optional<Claim> opt = societies.getSocietiesService().getSocieties(location.getExtent().getUniqueId()).values().stream().flatMap(s -> s.getClaims().stream()).filter(c -> c.isClaimed(location.getBlockPosition())).findAny();
+        Optional<? extends Claim> opt = societies.getSocietiesService().getSocieties(location.getExtent().getUniqueId()).values().stream().flatMap(s -> s.getClaims().stream()).filter(c -> c.isClaimed(location.getBlockPosition())).findAny();
         while (opt.isPresent()) {
             claim = opt.get();
             opt = claim.getSociety().getSubSocieties().values().stream().flatMap(s -> s.toSociety().getClaims().stream()).filter(c -> c.isClaimed(location.getBlockPosition())).findAny();
@@ -105,7 +105,7 @@ public class WorldProtectionListener {
                 cancel.run();
                 return;
             }
-            Optional<MemberClaim> memberClaim = claim.getMemberClaims().stream().filter(c -> c.isClaimed(location.getBlockPosition())).findAny();
+            Optional<? extends MemberClaim> memberClaim = claim.getMemberClaims().stream().filter(c -> c.isClaimed(location.getBlockPosition())).findAny();
             if ((memberClaim.isPresent() && !memberClaim.get().getPermissions(member).map(hasPermission).orElse(false)) || !memberClaim.isPresent() && !claim.getPermissions(member.getRank()).map(ph -> ph.hasPermission(ClaimPermission.BUILD)).orElse(false)) {
                 cancel.run();
             }

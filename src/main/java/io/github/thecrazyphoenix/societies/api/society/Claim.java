@@ -21,7 +21,7 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
      * The cuboids may overlap.
      * @return The cuboids as an unmodifiable set.
      */
-    Set<Cuboid> getClaimCuboids();
+    Set<? extends Cuboid> getClaimCuboids();
 
     /**
      * Retrieves the permissions that are used if a rank's permissions are undefined.
@@ -34,7 +34,7 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
      * @param rank The rank whose permissions to retrieve.
      * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, otherwise {@link Optional#empty()}.
      */
-    Optional<PermissionHolder<ClaimPermission>> getPermissions(MemberRank rank);
+    Optional<? extends PermissionHolder<ClaimPermission>> getPermissions(MemberRank rank);
 
     /**
      * Sets the given rank's permissions.
@@ -48,14 +48,14 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
      * Retrieves all the permissions associated with member ranks.
      * @return The permissions as an unmodifiable member rank-indexed map of permission holders of claim permissions.
      */
-    Map<MemberRank, PermissionHolder<ClaimPermission>> getMemberRankPermissions();
+    Map<? extends MemberRank, ? extends PermissionHolder<ClaimPermission>> getMemberRankPermissions();
 
     /**
      * Retrieves the permissions of a given sub-society.
      * @param subSociety The society whose permissions to retrieve.
      * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, otherwise {@link Optional#empty()}.
      */
-    Optional<PermissionHolder<ClaimPermission>> getPermissions(SubSociety subSociety);
+    Optional<? extends PermissionHolder<ClaimPermission>> getPermissions(SubSociety subSociety);
 
     /**
      * Sets the given sub-society's permissions.
@@ -69,7 +69,7 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
      * Retrieves all the permissions associated with sub-societies.
      * @return The permissions as an unmodifiable sub-society-indexed map of permission holders of claim permissions.
      */
-    Map<SubSociety, PermissionHolder<ClaimPermission>> getSubSocietyPermissions();
+    Map<? extends SubSociety, ? extends PermissionHolder<ClaimPermission>> getSubSocietyPermissions();
 
     /**
      * Retrieves all the member claims this claim contains.
@@ -77,13 +77,13 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
      * Modifying this set with an invalid value may cause undefined behaviour.
      * @return The retrieved member claims as an unmodifiable set.
      */
-    Set<MemberClaim> getMemberClaims();
+    Set<? extends MemberClaim> getMemberClaims();
 
     /**
      * Retrieves the land tax paid by members who own land in this claim.
      * @return The land tax rate per block per day as an unmodifiable currency-indexed map.
      */
-    Map<Currency, BigDecimal> getLandTax();
+    Map<? extends Currency, ? extends BigDecimal> getLandTax();
 
     /**
      * Sets the land tax for the given currency.
@@ -99,7 +99,7 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
      * This defines the value of member claims.
      * @return The land value per block as an unmodifiable currency-indexed.
      */
-    Map<Currency, BigDecimal> getLandValue();
+    Map<? extends Currency, ? extends BigDecimal> getLandValue();
 
     /**
      * Sets the land value for the given currency.

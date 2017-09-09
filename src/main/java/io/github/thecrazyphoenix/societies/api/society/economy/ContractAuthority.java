@@ -10,5 +10,5 @@ public interface ContractAuthority {
      * Retrieves the active contracts that are enforced by this authority.
      * @return The active contracts as an unmodifiable set.
      */
-    Set<Contract> getContracts();
+    Set<? extends Contract> getContracts();
 }
