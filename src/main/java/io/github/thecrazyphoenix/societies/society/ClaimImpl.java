@@ -12,8 +12,9 @@ import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import io.github.thecrazyphoenix.societies.api.society.SubSociety;
 import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
 import io.github.thecrazyphoenix.societies.api.society.economy.Contract;
-import io.github.thecrazyphoenix.societies.event.ClaimChangeEventImpl;
+import io.github.thecrazyphoenix.societies.event.ChangeClaimEventImpl;
 import io.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
+import io.github.thecrazyphoenix.societies.permission.DefaultPermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
 import io.github.thecrazyphoenix.societies.society.economy.VariableContract;
 import io.github.thecrazyphoenix.societies.society.internal.SocietyElementImpl;
@@ -56,6 +57,8 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
         defaultPermissions = CommonMethods.mapToHolder(societies, society, PowerlessPermissionHolder.CLAIM, builder.defaultPermissions);
         viewMemberRankPermissions = Collections.unmodifiableMap(memberRankPermissions = new HashMap<>());
         viewSubSocietyPermissions = Collections.unmodifiableMap(subSocietyPermissions = new HashMap<>());
+        builder.memberRankPermissions.keySet().forEach(r -> CommonMethods.checkMatchingSociety(this, r));
+        builder.subSocietyPermissions.keySet().forEach(s -> CommonMethods.checkMatchingSociety(this, s));
         builder.memberRankPermissions.forEach((r, m) -> memberRankPermissions.put(r, CommonMethods.mapToHolder(societies, society, PowerlessPermissionHolder.CLAIM, m)));
         builder.subSocietyPermissions.forEach((s, m) -> subSocietyPermissions.put(s, CommonMethods.mapToHolder(societies, society, PowerlessPermissionHolder.CLAIM, m)));
         viewCuboids = Collections.unmodifiableSet(cuboids = new HashSet<>());
@@ -76,13 +79,9 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
     }
 
     @Override
-    public Optional<PermissionHolder<ClaimPermission>> getPermissions(MemberRank rank) {
-        return rank.getParent().isPresent() ? Optional.ofNullable(memberRankPermissions.get(rank)) : Optional.of(AbsolutePermissionHolder.CLAIM);
-    }
-
-    @Override
-    public void setPermissions(MemberRank rank, PermissionHolder<ClaimPermission> permissions) {
-        memberRankPermissions.put(rank, permissions);
+    public PermissionHolder<ClaimPermission> getPermissions(MemberRank rank) {
+        CommonMethods.checkMatchingSociety(this, rank);
+        return rank.getParent().isPresent() ? memberRankPermissions.computeIfAbsent(rank, k -> DefaultPermissionHolder.builder(societies, society, defaultPermissions).build()) : AbsolutePermissionHolder.CLAIM;
     }
 
     @Override
@@ -91,14 +90,9 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
     }
 
     @Override
-    public Optional<PermissionHolder<ClaimPermission>> getPermissions(SubSociety subSociety) {
-        return Optional.ofNullable(subSocietyPermissions.get(subSociety));
-    }
-
-    @Override
-    public void setPermissions(SubSociety subSociety, PermissionHolder<ClaimPermission> permissions) {
-        // TODO Add event for this modification and fix all other setPermissions-related events.
-        subSocietyPermissions.put(subSociety, permissions);
+    public PermissionHolder<ClaimPermission> getPermissions(SubSociety subSociety) {
+        CommonMethods.checkMatchingSociety(this, subSociety);
+        return subSocietyPermissions.computeIfAbsent(subSociety, k -> DefaultPermissionHolder.builder(societies, society, defaultPermissions).build());
     }
 
     @Override
@@ -120,7 +114,7 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
 
     @Override
     public boolean setLandTax(Currency currency, BigDecimal value, Cause cause) {
-        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandTax(cause, this, currency, value))) {
+        if (!societies.queueEvent(new ChangeClaimEventImpl.ChangeLandTax(cause, this, currency, value))) {
             if (BigDecimal.ZERO.equals(value)) {
                 contracts.removeIf(c -> c.getCurrency() == currency);
                 landTax.remove(currency.getId());
@@ -142,7 +136,7 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
 
     @Override
     public boolean setLandValue(Currency currency, BigDecimal value, Cause cause) {
-        if (!societies.queueEvent(new ClaimChangeEventImpl.ChangeLandValue(cause, this, currency, value))) {
+        if (!societies.queueEvent(new ChangeClaimEventImpl.ChangeLandValue(cause, this, currency, value))) {
             if (BigDecimal.ZERO.equals(value)) {
                 landValue.remove(currency.getId());
             } else {
@@ -166,7 +160,7 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
 
     @Override
     public boolean destroy(Cause cause) {
-        if (!societies.queueEvent(new ClaimChangeEventImpl.Destroy(cause, this))) {
+        if (!societies.queueEvent(new ChangeClaimEventImpl.Destroy(cause, this))) {
             society.getClaimsRaw().remove(this);
             return true;
         }
@@ -283,7 +277,7 @@ public class ClaimImpl extends SocietyElementImpl implements Claim {
         @Override
         public Optional<ClaimImpl> build(Cause cause) {
             ClaimImpl claim = new ClaimImpl(this);
-            if (!societies.queueEvent(new ClaimChangeEventImpl.Create(cause, claim))) {
+            if (!societies.queueEvent(new ChangeClaimEventImpl.Create(cause, claim))) {
                 society.getClaimsRaw().add(claim);
                 societies.onSocietyModified();
                 return Optional.of(claim);

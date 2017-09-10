@@ -7,7 +7,7 @@ import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.society.Claim;
 import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberClaim;
-import io.github.thecrazyphoenix.societies.event.MemberClaimChangeEventImpl;
+import io.github.thecrazyphoenix.societies.event.ChangeMemberClaimEventImpl;
 import io.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
@@ -44,7 +44,8 @@ public class MemberClaimImpl extends CuboidImpl implements MemberClaim {
 
     @Override
     public boolean setOwner(Member newOwner, Cause cause) {
-        if (!societies.queueEvent(new MemberClaimChangeEventImpl.ChangeOwner(cause, this, newOwner))) {
+        CommonMethods.checkMatchingSociety(this, newOwner);
+        if (!societies.queueEvent(new ChangeMemberClaimEventImpl.ChangeOwner(cause, this, newOwner))) {
             owner = newOwner;
             societies.onSocietyModified();
             return true;
@@ -78,7 +79,7 @@ public class MemberClaimImpl extends CuboidImpl implements MemberClaim {
 
     @Override
     public boolean destroy(Cause cause) {
-        if (!societies.queueEvent(new MemberClaimChangeEventImpl.Destroy(cause, this))) {
+        if (!societies.queueEvent(new ChangeMemberClaimEventImpl.Destroy(cause, this))) {
             parent.getMemberClaimsRaw().remove(this);
             return true;
         }
@@ -115,7 +116,7 @@ public class MemberClaimImpl extends CuboidImpl implements MemberClaim {
         public Optional<MemberClaimImpl> build(Cause cause) {
             super.build();
             MemberClaimImpl memberClaim = new MemberClaimImpl(this);
-            if (!societies.queueEvent(new MemberClaimChangeEventImpl.Create(cause, memberClaim))) {
+            if (!societies.queueEvent(new ChangeMemberClaimEventImpl.Create(cause, memberClaim))) {
                 parent.getMemberClaimsRaw().add(memberClaim);
                 societies.onSocietyModified();
                 return Optional.of(memberClaim);

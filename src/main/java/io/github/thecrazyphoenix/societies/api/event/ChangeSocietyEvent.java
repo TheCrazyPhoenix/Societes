@@ -8,7 +8,7 @@ import org.spongepowered.api.event.Event;
  * Base event for when a society changes.
  * This is called when anything owned by the society changes.
  */
-public interface SocietyChangeEvent extends Event, Cancellable {
+public interface ChangeSocietyEvent extends Event, Cancellable {
     /**
      * Retrieves the modified society.
      * This is the society or sub-society which is most concerned by this event.
@@ -20,10 +20,10 @@ public interface SocietyChangeEvent extends Event, Cancellable {
     /**
      * Called when a society is created.
      */
-    interface Create extends SocietyChangeEvent {}
+    interface Create extends ChangeSocietyEvent {}
 
     /**
      * Called when a society is destroyed.
      */
-    interface Destroy extends SocietyChangeEvent {}
+    interface Destroy extends ChangeSocietyEvent {}
 }

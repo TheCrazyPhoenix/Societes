@@ -1,12 +1,12 @@
 package io.github.thecrazyphoenix.societies.society;
 
 import io.github.thecrazyphoenix.societies.Societies;
-import io.github.thecrazyphoenix.societies.api.event.PermissionChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangePermissionEvent;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
-import io.github.thecrazyphoenix.societies.event.MemberChangeEventImpl;
+import io.github.thecrazyphoenix.societies.event.ChangeMemberEventImpl;
 import io.github.thecrazyphoenix.societies.permission.AbstractPermissionHolder;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
@@ -45,7 +45,7 @@ public class MemberImpl extends AbstractPermissionHolder<MemberPermission> imple
 
     @Override
     public boolean setTitle(Text newTitle, Cause cause) {
-        if (!societies.queueEvent(new MemberChangeEventImpl.ChangeTitle(cause, this, newTitle))) {
+        if (!societies.queueEvent(new ChangeMemberEventImpl.ChangeTitle(cause, this, newTitle))) {
             title = newTitle;
             societies.onSocietyModified();
             return true;
@@ -60,7 +60,7 @@ public class MemberImpl extends AbstractPermissionHolder<MemberPermission> imple
 
     @Override
     public boolean destroy(Cause cause) {
-        if (!societies.queueEvent(new MemberChangeEventImpl.Destroy(cause, this))) {
+        if (!societies.queueEvent(new ChangeMemberEventImpl.Destroy(cause, this))) {
             society.getMembersRaw().remove(user);
             rank.getMembersRaw().remove(user);
             return true;
@@ -69,8 +69,8 @@ public class MemberImpl extends AbstractPermissionHolder<MemberPermission> imple
     }
 
     @Override
-    protected PermissionChangeEvent createEvent(MemberPermission permission, PermissionState newState, Cause cause) {
-        return new MemberChangeEventImpl.ChangePermission(cause, this, permission, newState);
+    protected ChangePermissionEvent createEvent(MemberPermission permission, PermissionState newState, Cause cause) {
+        return new ChangeMemberEventImpl.ChangePermission(cause, this, permission, newState);
     }
 
     public static class Builder extends AbstractPermissionHolder.Builder<Builder, MemberPermission> implements Member.Builder {
@@ -101,7 +101,7 @@ public class MemberImpl extends AbstractPermissionHolder<MemberPermission> imple
         public Optional<MemberImpl> build(Cause cause) {
             CommonMethods.checkNotNullState(user, "user is mandatory");
             MemberImpl member = new MemberImpl(this);
-            if (!societies.queueEvent(new MemberChangeEventImpl.Create(cause, member))) {
+            if (!societies.queueEvent(new ChangeMemberEventImpl.Create(cause, member))) {
                 rank.getSociety().getMembersRaw().put(user, member);
                 rank.getMembersRaw().put(user, member);
                 societies.onSocietyModified();

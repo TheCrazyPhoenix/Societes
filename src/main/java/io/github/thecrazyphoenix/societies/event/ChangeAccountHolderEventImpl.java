@@ -1,16 +1,16 @@
 package io.github.thecrazyphoenix.societies.event;
 
-import io.github.thecrazyphoenix.societies.api.event.AccountHolderChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangeAccountHolderEvent;
 import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.impl.AbstractEvent;
 
-public class AccountHolderChangeEventImpl extends AbstractEvent implements AccountHolderChangeEvent {
+public class ChangeAccountHolderEventImpl extends AbstractEvent implements ChangeAccountHolderEvent {
     private boolean cancelled;
     private Cause cause;
     private AccountHolder accountHolder;
 
-    public AccountHolderChangeEventImpl(Cause cause, AccountHolder accountHolder) {
+    public ChangeAccountHolderEventImpl(Cause cause, AccountHolder accountHolder) {
         this.cause = cause;
         this.accountHolder = accountHolder;
         cancelled = false;
@@ -36,13 +36,13 @@ public class AccountHolderChangeEventImpl extends AbstractEvent implements Accou
         cancelled = cancel;
     }
 
-    public static class Create extends AccountHolderChangeEventImpl implements AccountHolderChangeEvent.Create {
+    public static class Create extends ChangeAccountHolderEventImpl implements ChangeAccountHolderEvent.Create {
         public Create(Cause cause, AccountHolder accountHolder) {
             super(cause, accountHolder);
         }
     }
 
-    public static class Destroy extends AccountHolderChangeEventImpl implements AccountHolderChangeEvent.Destroy {
+    public static class Destroy extends ChangeAccountHolderEventImpl implements ChangeAccountHolderEvent.Destroy {
         public Destroy(Cause cause, AccountHolder accountHolder) {
             super(cause, accountHolder);
         }

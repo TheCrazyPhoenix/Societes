@@ -8,7 +8,7 @@ import org.spongepowered.api.text.Text;
 /**
  * Base event for when a member rank's title, description or permissions change.
  */
-public interface MemberRankChangeEvent extends SocietyElementChangeEvent {
+public interface ChangeMemberRankEvent extends ChangeSocietyElementEvent {
     /**
      * Retrieves the member rank affected by this event.
      * This will always represent the old state of the member rank, except for the {@link Create} event.
@@ -19,17 +19,17 @@ public interface MemberRankChangeEvent extends SocietyElementChangeEvent {
     /**
      * Called when a member rank is created.
      */
-    interface Create extends MemberRankChangeEvent, SocietyElementChangeEvent.Create {}
+    interface Create extends ChangeMemberRankEvent, ChangeSocietyElementEvent.Create {}
 
     /**
      * Called when a member rank is destroyed.
      */
-    interface Destroy extends MemberRankChangeEvent, SocietyElementChangeEvent.Destroy {}
+    interface Destroy extends ChangeMemberRankEvent, ChangeSocietyElementEvent.Destroy {}
 
     /**
      * Called when a member rank's title is changed.
      */
-    interface ChangeTitle extends MemberRankChangeEvent {
+    interface ChangeTitle extends ChangeMemberRankEvent {
         /**
          * Retrieves the member rank's new title.
          * @return The new title as a Text object.
@@ -40,7 +40,7 @@ public interface MemberRankChangeEvent extends SocietyElementChangeEvent {
     /**
      * Called when a member rank's description is changed.
      */
-    interface ChangeDescription extends MemberRankChangeEvent {
+    interface ChangeDescription extends ChangeMemberRankEvent {
         /**
          * Retrieves the member rank's new description.
          */
@@ -51,7 +51,7 @@ public interface MemberRankChangeEvent extends SocietyElementChangeEvent {
      * Called when a member rank's permissions change.
      * Claim permission changes will not call this event.
      */
-    interface ChangePermission extends MemberRankChangeEvent, PermissionChangeEvent {
+    interface ChangePermission extends ChangeMemberRankEvent, ChangePermissionEvent {
         /**
          * Retrieves the permission affected by this event.
          * @return The permission as a MemberPermission.
@@ -63,7 +63,7 @@ public interface MemberRankChangeEvent extends SocietyElementChangeEvent {
     /**
      * Called when a member rank's claim permissions change.
      */
-    interface ChangeClaimPermission extends MemberRankChangeEvent, ClaimChangeEvent, PermissionChangeEvent {
+    interface ChangeClaimPermission extends ChangeMemberRankEvent, ChangeClaimEvent, ChangePermissionEvent {
         /**
          * Retrieves the permission affected by this event.
          * @return The permission as a MemberPermission.

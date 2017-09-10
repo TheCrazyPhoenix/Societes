@@ -106,7 +106,7 @@ public class WorldProtectionListener {
                 return;
             }
             Optional<? extends MemberClaim> memberClaim = claim.getMemberClaims().stream().filter(c -> c.isClaimed(location.getBlockPosition())).findAny();
-            if ((memberClaim.isPresent() && !memberClaim.get().getPermissions(member).map(hasPermission).orElse(false)) || !memberClaim.isPresent() && !claim.getPermissions(member.getRank()).map(ph -> ph.hasPermission(ClaimPermission.BUILD)).orElse(false)) {
+            if ((memberClaim.isPresent() && !memberClaim.get().getPermissions(member).map(hasPermission).orElse(false)) || !memberClaim.isPresent() && !claim.getPermissions(member.getRank()).hasPermission(ClaimPermission.BUILD)) {
                 cancel.run();
             }
         }

@@ -7,7 +7,7 @@ import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.api.society.SubSociety;
 import io.github.thecrazyphoenix.societies.api.society.economy.Contract;
-import io.github.thecrazyphoenix.societies.event.SocietyChangeEventImpl;
+import io.github.thecrazyphoenix.societies.event.ChangeSocietyEventImpl;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.account.Account;
@@ -112,7 +112,7 @@ public class SocietyImpl implements Society {
 
     @Override
     public boolean destroy(Cause cause) {
-        if (!societies.queueEvent(new SocietyChangeEventImpl.Destroy(cause, this))) {
+        if (!societies.queueEvent(new ChangeSocietyEventImpl.Destroy(cause, this))) {
             societies.getRootSocieties(worldUUID).remove(id);
             societies.getAllSocieties(worldUUID).remove(id);
             societies.getSocietiesService().removeAuthority(this);
@@ -176,7 +176,7 @@ public class SocietyImpl implements Society {
             CommonMethods.checkNotNullState(name, "name is mandatory");
             CommonMethods.checkNotNullState(abbreviatedName, "abbreviated name is mandatory");
             SocietyImpl society = new SocietyImpl(this);
-            if (!societies.queueEvent(new SocietyChangeEventImpl.Create(cause, society))) {
+            if (!societies.queueEvent(new ChangeSocietyEventImpl.Create(cause, society))) {
                 societies.getRootSocieties(world).put(society.getIdentifier(), society);
                 societies.getAllSocieties(world).put(society.getIdentifier(), society);
                 societies.getSocietiesService().addAuthority(society);

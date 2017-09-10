@@ -1,13 +1,13 @@
 package io.github.thecrazyphoenix.societies.event;
 
-import io.github.thecrazyphoenix.societies.api.event.SocietyElementChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangeSocietyElementEvent;
 import io.github.thecrazyphoenix.societies.api.society.SocietyElement;
 import org.spongepowered.api.event.cause.Cause;
 
-public class SocietyElementChangeEventImpl extends SocietyChangeEventImpl implements SocietyElementChangeEvent {
+public class ChangeSocietyElementEventImpl extends ChangeSocietyEventImpl implements ChangeSocietyElementEvent {
     private SocietyElement element;
 
-    public SocietyElementChangeEventImpl(Cause cause, SocietyElement element) {
+    public ChangeSocietyElementEventImpl(Cause cause, SocietyElement element) {
         super(cause, element.getSociety());
         this.element = element;
     }

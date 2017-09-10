@@ -43,6 +43,8 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("ConstantConditions")
 public class SocietySerializer {
+    private static final String SOCIETIES_KEY = "societies";
+
     private static final String WORLD_KEY = "world";
     private static final String NAME_KEY = "name";
     private static final String ABBREVIATED_NAME_KEY = "abbreviated-name";
@@ -91,7 +93,7 @@ public class SocietySerializer {
     public void serializeSocieties(ConfigurationNode node, Stream<Society> societies) {
         Map<Society, ConfigurationNode> incomplete = new HashMap<>();
         Map<Society, ConfigurationNode> buffer = new HashMap<>();
-        societies.forEach(s -> serializeSocietyFull(s, node.getAppendedNode(), incomplete));
+        societies.forEach(s -> serializeSocietyFull(s, node.getNode(SOCIETIES_KEY).getAppendedNode(), incomplete));
         while (incomplete.size() > 0) {
             incomplete.forEach((s, n) -> serializeSocietyFull(s, n, buffer));
             incomplete.clear();
@@ -103,7 +105,7 @@ public class SocietySerializer {
     public void deserializeSocieties(ConfigurationNode node) {
         Map<SocietyImpl, ConfigurationNode> incomplete = new HashMap<>();
         Map<SocietyImpl, ConfigurationNode> buffer = new HashMap<>();
-        node.getChildrenList().forEach(n -> deserializeSocietyFull(n, incomplete));
+        node.getNode(SOCIETIES_KEY).getChildrenList().forEach(n -> deserializeSocietyFull(n, incomplete));
         while (incomplete.size() > 0) {
             incomplete.forEach((s, n) -> deserializeSocietyFinish(s, n, buffer));
             incomplete.clear();

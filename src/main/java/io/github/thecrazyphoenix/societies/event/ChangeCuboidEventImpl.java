@@ -1,13 +1,13 @@
 package io.github.thecrazyphoenix.societies.event;
 
-import io.github.thecrazyphoenix.societies.api.event.CuboidChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangeCuboidEvent;
 import io.github.thecrazyphoenix.societies.api.society.Cuboid;
 import org.spongepowered.api.event.cause.Cause;
 
-public class CuboidChangeEventImpl extends ClaimChangeEventImpl implements CuboidChangeEvent {
+public class ChangeCuboidEventImpl extends ChangeClaimEventImpl implements ChangeCuboidEvent {
     private Cuboid cuboid;
 
-    public CuboidChangeEventImpl(Cause cause, Cuboid cuboid) {
+    public ChangeCuboidEventImpl(Cause cause, Cuboid cuboid) {
         super(cause, cuboid.getParent());
         this.cuboid = cuboid;
     }
@@ -17,13 +17,13 @@ public class CuboidChangeEventImpl extends ClaimChangeEventImpl implements Cuboi
         return cuboid;
     }
 
-    public static class Create extends CuboidChangeEventImpl implements CuboidChangeEvent.Create {
+    public static class Create extends ChangeCuboidEventImpl implements ChangeCuboidEvent.Create {
         public Create(Cause cause, Cuboid cuboid) {
             super(cause, cuboid);
         }
     }
 
-    public static class Destroy extends CuboidChangeEventImpl implements CuboidChangeEvent.Destroy {
+    public static class Destroy extends ChangeCuboidEventImpl implements ChangeCuboidEvent.Destroy {
         public Destroy(Cause cause, Cuboid cuboid) {
             super(cause, cuboid);
         }

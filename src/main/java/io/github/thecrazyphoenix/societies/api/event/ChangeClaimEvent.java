@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 /**
  * Base event for when information related to a claim changes (new, destroy, rezone, member claims)
  */
-public interface ClaimChangeEvent extends SocietyElementChangeEvent {
+public interface ChangeClaimEvent extends ChangeSocietyElementEvent {
     /**
      * Retrieves the claim affected by this event.
      * This object will represent the old state except for the {@link Create} event.
@@ -19,17 +19,17 @@ public interface ClaimChangeEvent extends SocietyElementChangeEvent {
     /**
      * Called when a claim is created.
      */
-    interface Create extends ClaimChangeEvent, SocietyElementChangeEvent.Create {}
+    interface Create extends ChangeClaimEvent, ChangeSocietyElementEvent.Create {}
 
     /**
      * Called when a claim is destroyed (i.e. removed or entirely stolen)
      */
-    interface Destroy extends ClaimChangeEvent, SocietyElementChangeEvent.Destroy {}
+    interface Destroy extends ChangeClaimEvent, ChangeSocietyElementEvent.Destroy {}
 
     /**
      * Called when a claim changes in volume (i.e. modified size or partially stolen).
      */
-    interface ChangeVolume extends ClaimChangeEvent {
+    interface ChangeVolume extends ChangeClaimEvent {
         /**
          * Retrieves the new volume of the modified claim.
          * @return The new volume in blocks (i.e. cubic metres)
@@ -40,7 +40,7 @@ public interface ClaimChangeEvent extends SocietyElementChangeEvent {
     /**
      * Called when a claim's land value changes.
      */
-    interface ChangeLandValue extends ClaimChangeEvent {
+    interface ChangeLandValue extends ChangeClaimEvent {
         /**
          * Retrieves the currency whose land value was changed.
          * @return The affected currency.
@@ -57,7 +57,7 @@ public interface ClaimChangeEvent extends SocietyElementChangeEvent {
     /**
      * Called when a claim's land tax rate changes.
      */
-    interface ChangeLandTax extends ClaimChangeEvent {
+    interface ChangeLandTax extends ChangeClaimEvent {
         /**
          * Retrieves the currency whose land tax was changed.
          * @return The affected currency.

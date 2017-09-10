@@ -1,14 +1,14 @@
 package io.github.thecrazyphoenix.societies.event;
 
 import io.github.thecrazyphoenix.societies.api.society.Member;
-import io.github.thecrazyphoenix.societies.api.event.MemberClaimChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangeMemberClaimEvent;
 import io.github.thecrazyphoenix.societies.api.society.MemberClaim;
 import org.spongepowered.api.event.cause.Cause;
 
-public class MemberClaimChangeEventImpl extends CuboidChangeEventImpl implements MemberClaimChangeEvent {
+public class ChangeMemberClaimEventImpl extends ChangeCuboidEventImpl implements ChangeMemberClaimEvent {
     private MemberClaim memberClaim;
 
-    public MemberClaimChangeEventImpl(Cause cause, MemberClaim memberClaim) {
+    public ChangeMemberClaimEventImpl(Cause cause, MemberClaim memberClaim) {
         super(cause, memberClaim);
         this.memberClaim = memberClaim;
     }
@@ -18,19 +18,19 @@ public class MemberClaimChangeEventImpl extends CuboidChangeEventImpl implements
         return memberClaim;
     }
 
-    public static class Create extends MemberClaimChangeEventImpl implements MemberClaimChangeEvent.Create {
+    public static class Create extends ChangeMemberClaimEventImpl implements ChangeMemberClaimEvent.Create {
         public Create(Cause cause, MemberClaim memberClaim) {
             super(cause, memberClaim);
         }
     }
 
-    public static class Destroy extends MemberClaimChangeEventImpl implements MemberClaimChangeEvent.Destroy {
+    public static class Destroy extends ChangeMemberClaimEventImpl implements ChangeMemberClaimEvent.Destroy {
         public Destroy(Cause cause, MemberClaim memberClaim) {
             super(cause, memberClaim);
         }
     }
 
-    public static class ChangeOwner extends MemberClaimChangeEventImpl implements MemberClaimChangeEvent.ChangeOwner {
+    public static class ChangeOwner extends ChangeMemberClaimEventImpl implements ChangeMemberClaimEvent.ChangeOwner {
         private Member newOwner;
 
         public ChangeOwner(Cause cause, MemberClaim memberClaim, Member newOwner) {

@@ -1,10 +1,10 @@
 package io.github.thecrazyphoenix.societies.permission;
 
 import io.github.thecrazyphoenix.societies.Societies;
-import io.github.thecrazyphoenix.societies.api.event.PermissionChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangePermissionEvent;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
-import io.github.thecrazyphoenix.societies.event.PermissionChangeEventImpl;
+import io.github.thecrazyphoenix.societies.event.ChangePermissionEventImpl;
 import io.github.thecrazyphoenix.societies.society.SocietyImpl;
 import org.spongepowered.api.event.cause.Cause;
 
@@ -14,8 +14,8 @@ public class DefaultPermissionHolder<T extends Enum<T>> extends AbstractPermissi
     }
 
     @Override
-    protected PermissionChangeEvent createEvent(T permission, PermissionState newState, Cause cause) {
-        return new PermissionChangeEventImpl(cause, this, permission, newState);
+    protected ChangePermissionEvent createEvent(T permission, PermissionState newState, Cause cause) {
+        return new ChangePermissionEventImpl(cause, this, permission, newState);
     }
 
     public static <P extends Enum<P>> Builder<P> builder(Societies societies, SocietyImpl society, PermissionHolder<P> parent) {

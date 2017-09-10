@@ -24,25 +24,17 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
     Set<? extends Cuboid> getClaimCuboids();
 
     /**
-     * Retrieves the permissions that are used if a rank's permissions are undefined.
+     * Retrieves the permissions that are used if a rank's permissions are undefined or {@link PermissionState#NONE}
      * @return The retrieved permissions as a PermissionHolder of ClaimPermission.
      */
     PermissionHolder<ClaimPermission> getDefaultPermissions();
 
     /**
-     * Retrieves the permissions of a given rank.
+     * Retrieves or creates the permissions of a given rank.
      * @param rank The rank whose permissions to retrieve.
-     * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, otherwise {@link Optional#empty()}.
+     * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, a newly created PermissionHolder otherwise.
      */
-    Optional<? extends PermissionHolder<ClaimPermission>> getPermissions(MemberRank rank);
-
-    /**
-     * Sets the given rank's permissions.
-     * Use this method if {@link #getPermissions(MemberRank)} returns {@link Optional#empty()} and you wish to modify the permissions.
-     * @param rank The rank whose permissions to set.
-     * @param permissions The object holding those permissions. If null, the rank will use the default permissions.
-     */
-    void setPermissions(MemberRank rank, PermissionHolder<ClaimPermission> permissions);
+    PermissionHolder<ClaimPermission> getPermissions(MemberRank rank);
 
     /**
      * Retrieves all the permissions associated with member ranks.
@@ -51,19 +43,11 @@ public interface Claim extends SocietyElement, ClaimedLand, ContractAuthority {
     Map<? extends MemberRank, ? extends PermissionHolder<ClaimPermission>> getMemberRankPermissions();
 
     /**
-     * Retrieves the permissions of a given sub-society.
+     * Retrieves or creates the permissions of a given sub-society.
      * @param subSociety The society whose permissions to retrieve.
-     * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, otherwise {@link Optional#empty()}.
+     * @return The retrieved permissions as a PermissionHolder of ClaimPermission if present, a newly created PermissionHolder otherwise.
      */
-    Optional<? extends PermissionHolder<ClaimPermission>> getPermissions(SubSociety subSociety);
-
-    /**
-     * Sets the given sub-society's permissions.
-     * Use this method if {@link #getPermissions(SubSociety)} returns {@link Optional#empty()} and you wish to modify the permissions.
-     * @param subSociety The sub-society whose permissions to set.
-     * @param permissions The object holding those permissions. If null, the sub-society will use the default permissions.
-     */
-    void setPermissions(SubSociety subSociety, PermissionHolder<ClaimPermission> permissions);
+    PermissionHolder<ClaimPermission> getPermissions(SubSociety subSociety);
 
     /**
      * Retrieves all the permissions associated with sub-societies.

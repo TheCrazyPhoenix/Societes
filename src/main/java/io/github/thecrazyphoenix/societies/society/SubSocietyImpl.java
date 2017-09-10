@@ -1,12 +1,12 @@
 package io.github.thecrazyphoenix.societies.society;
 
 import io.github.thecrazyphoenix.societies.Societies;
-import io.github.thecrazyphoenix.societies.api.event.PermissionChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangePermissionEvent;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.permission.SocietyPermission;
 import io.github.thecrazyphoenix.societies.api.society.Society;
 import io.github.thecrazyphoenix.societies.api.society.SubSociety;
-import io.github.thecrazyphoenix.societies.event.SubSocietyChangeEventImpl;
+import io.github.thecrazyphoenix.societies.event.ChangeSubSocietyEventImpl;
 import io.github.thecrazyphoenix.societies.permission.AbstractPermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
@@ -35,7 +35,7 @@ public class SubSocietyImpl extends AbstractPermissionHolder<SocietyPermission> 
 
     @Override
     public boolean destroy(Cause cause) {
-        if (!societies.queueEvent(new SubSocietyChangeEventImpl.Destroy(cause, this))) {
+        if (!societies.queueEvent(new ChangeSubSocietyEventImpl.Destroy(cause, this))) {
             society.getSubSocietiesRaw().remove(subSociety.getIdentifier());
             return true;
         }
@@ -43,8 +43,8 @@ public class SubSocietyImpl extends AbstractPermissionHolder<SocietyPermission> 
     }
 
     @Override
-    protected PermissionChangeEvent createEvent(SocietyPermission permission, PermissionState newState, Cause cause) {
-        return new SubSocietyChangeEventImpl.ChangePermission(cause, this, permission, newState);
+    protected ChangePermissionEvent createEvent(SocietyPermission permission, PermissionState newState, Cause cause) {
+        return new ChangeSubSocietyEventImpl.ChangePermission(cause, this, permission, newState);
     }
 
     public static class Builder extends AbstractPermissionHolder.Builder<Builder, SocietyPermission> implements SubSociety.Builder {
@@ -71,9 +71,11 @@ public class SubSocietyImpl extends AbstractPermissionHolder<SocietyPermission> 
                 throw new IllegalStateException("sub-society must be in the same world");
             } else if (!societies.getRootSocieties(subSociety.getWorldUUID()).containsKey(subSociety.getIdentifier())) {
                 throw new IllegalStateException("sub-society cannot have two parent societies");
+            } else if (subSociety == society) {
+                throw new IllegalStateException("sub-society cannot have itself as a parent");
             }
             SubSocietyImpl subSociety = new SubSocietyImpl(this);
-            if (!societies.queueEvent(new SubSocietyChangeEventImpl.Create(cause, subSociety))) {
+            if (!societies.queueEvent(new ChangeSubSocietyEventImpl.Create(cause, subSociety))) {
                 society.getSubSocietiesRaw().put(this.subSociety.getIdentifier(), subSociety);
                 societies.getRootSocieties(this.subSociety.getWorldUUID()).remove(this.subSociety.getIdentifier());
                 societies.onSocietyModified();

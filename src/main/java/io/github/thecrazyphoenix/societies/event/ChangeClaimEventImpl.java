@@ -1,16 +1,16 @@
 package io.github.thecrazyphoenix.societies.event;
 
-import io.github.thecrazyphoenix.societies.api.event.ClaimChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangeClaimEvent;
 import io.github.thecrazyphoenix.societies.api.society.Claim;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.economy.Currency;
 
 import java.math.BigDecimal;
 
-public class ClaimChangeEventImpl extends SocietyElementChangeEventImpl implements ClaimChangeEvent {
+public class ChangeClaimEventImpl extends ChangeSocietyElementEventImpl implements ChangeClaimEvent {
     private Claim claim;
 
-    public ClaimChangeEventImpl(Cause cause, Claim claim) {
+    public ChangeClaimEventImpl(Cause cause, Claim claim) {
         super(cause, claim);
         this.claim = claim;
     }
@@ -20,19 +20,19 @@ public class ClaimChangeEventImpl extends SocietyElementChangeEventImpl implemen
         return claim;
     }
 
-    public static class Create extends ClaimChangeEventImpl implements ClaimChangeEvent.Create {
+    public static class Create extends ChangeClaimEventImpl implements ChangeClaimEvent.Create {
         public Create(Cause cause, Claim claim) {
             super(cause, claim);
         }
     }
 
-    public static class Destroy extends ClaimChangeEventImpl implements ClaimChangeEvent.Destroy {
+    public static class Destroy extends ChangeClaimEventImpl implements ChangeClaimEvent.Destroy {
         public Destroy(Cause cause, Claim claim) {
             super(cause, claim);
         }
     }
 
-    public static class ChangeVolume extends ClaimChangeEventImpl implements ClaimChangeEvent.ChangeVolume {
+    public static class ChangeVolume extends ChangeClaimEventImpl implements ChangeClaimEvent.ChangeVolume {
         private int newVolume;
 
         public ChangeVolume(Cause cause, Claim claim, int newVolume) {
@@ -46,7 +46,7 @@ public class ClaimChangeEventImpl extends SocietyElementChangeEventImpl implemen
         }
     }
 
-    public static class ChangeLandValue extends ClaimChangeEventImpl implements ClaimChangeEvent.ChangeLandValue {
+    public static class ChangeLandValue extends ChangeClaimEventImpl implements ChangeClaimEvent.ChangeLandValue {
         private Currency currency;
         private BigDecimal newLandValue;
 
@@ -67,7 +67,7 @@ public class ClaimChangeEventImpl extends SocietyElementChangeEventImpl implemen
         }
     }
 
-    public static class ChangeLandTax extends ClaimChangeEventImpl implements ClaimChangeEvent.ChangeLandTax {
+    public static class ChangeLandTax extends ChangeClaimEventImpl implements ChangeClaimEvent.ChangeLandTax {
         private Currency currency;
         private BigDecimal newLandTax;
 

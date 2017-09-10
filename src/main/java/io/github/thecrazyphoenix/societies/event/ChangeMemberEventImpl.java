@@ -2,7 +2,7 @@ package io.github.thecrazyphoenix.societies.event;
 
 import io.github.thecrazyphoenix.societies.api.society.Cuboid;
 import io.github.thecrazyphoenix.societies.api.society.Member;
-import io.github.thecrazyphoenix.societies.api.event.MemberChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangeMemberEvent;
 import io.github.thecrazyphoenix.societies.api.society.Claim;
 import io.github.thecrazyphoenix.societies.api.society.MemberClaim;
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
@@ -13,10 +13,10 @@ import io.github.thecrazyphoenix.societies.api.society.economy.AccountHolder;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
-public class MemberChangeEventImpl extends SocietyElementChangeEventImpl implements MemberChangeEvent {
+public class ChangeMemberEventImpl extends ChangeSocietyElementEventImpl implements ChangeMemberEvent {
     private Member member;
 
-    public MemberChangeEventImpl(Cause cause, Member member) {
+    public ChangeMemberEventImpl(Cause cause, Member member) {
         super(cause, member);
         this.member = member;
     }
@@ -31,19 +31,19 @@ public class MemberChangeEventImpl extends SocietyElementChangeEventImpl impleme
         return member;
     }
 
-    public static class Create extends MemberChangeEventImpl implements MemberChangeEvent.Create {
+    public static class Create extends ChangeMemberEventImpl implements ChangeMemberEvent.Create {
         public Create(Cause cause, Member member) {
             super(cause, member);
         }
     }
 
-    public static class Destroy extends MemberChangeEventImpl implements MemberChangeEvent.Destroy {
+    public static class Destroy extends ChangeMemberEventImpl implements ChangeMemberEvent.Destroy {
         public Destroy(Cause cause, Member member) {
             super(cause, member);
         }
     }
 
-    public static class ChangeRank extends MemberChangeEventImpl implements MemberChangeEvent.ChangeRank {
+    public static class ChangeRank extends ChangeMemberEventImpl implements ChangeMemberEvent.ChangeRank {
         private MemberRank newRank;
 
         public ChangeRank(Cause cause, Member member, MemberRank newRank) {
@@ -57,7 +57,7 @@ public class MemberChangeEventImpl extends SocietyElementChangeEventImpl impleme
         }
     }
 
-    public static class ChangeTitle extends MemberChangeEventImpl implements MemberChangeEvent.ChangeTitle {
+    public static class ChangeTitle extends ChangeMemberEventImpl implements ChangeMemberEvent.ChangeTitle {
         private Text newTitle;
 
         public ChangeTitle(Cause cause, Member member, Text newTitle) {
@@ -71,7 +71,7 @@ public class MemberChangeEventImpl extends SocietyElementChangeEventImpl impleme
         }
     }
 
-    public static class ChangePermission extends MemberChangeEventImpl implements MemberChangeEvent.ChangePermission {
+    public static class ChangePermission extends ChangeMemberEventImpl implements ChangeMemberEvent.ChangePermission {
         private MemberPermission changedPermission;
         private PermissionState newValue;
 
@@ -92,7 +92,7 @@ public class MemberChangeEventImpl extends SocietyElementChangeEventImpl impleme
         }
     }
 
-    public static class ChangeClaimPermission extends MemberChangeEventImpl implements MemberChangeEvent.ChangeClaimPermission {
+    public static class ChangeClaimPermission extends ChangeMemberEventImpl implements ChangeMemberEvent.ChangeClaimPermission {
         private Claim claim;
         private MemberClaim memberClaim;
         private ClaimPermission changedPermission;

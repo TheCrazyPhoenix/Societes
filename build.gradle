@@ -26,5 +26,9 @@ sponge.plugin {
     }
 }
 
+if (file("build/idea").exists()) {
+    file("build/idea").deleteDir()
+}
+
 // Make sure SpongeVanilla is before the plugin in the classpath so that it can read its mcmod.info
 sourceSets.main.runtimeClasspath = files(sourceSets.main.runtimeClasspath.sort { a, b -> a.name == "$spongeImplName-${spongeImplVersion}.jar" ? -1 : b.name == "$spongeImplName-${spongeImplVersion}.jar" ? 1 : 0 })

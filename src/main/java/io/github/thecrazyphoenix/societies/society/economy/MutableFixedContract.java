@@ -11,14 +11,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 public class MutableFixedContract extends FixedContract implements MutableContract {
-    private Consumer<? super MutableFixedContract> onDestroy;
-
-    public MutableFixedContract(Societies societies, AccountHolder sender, String name, String currency, long interval, BigDecimal amount, Collection<? extends AccountHolder> applicable, Consumer<? super MutableFixedContract> onDestroy) {
+    public MutableFixedContract(Societies societies, AccountHolder sender, String name, String currency, long interval, BigDecimal amount, Collection<? extends AccountHolder> applicable) {
         super(societies, sender, name, currency, interval, amount, applicable);
-        this.onDestroy = onDestroy;
     }
 
     @Override
@@ -50,7 +46,6 @@ public class MutableFixedContract extends FixedContract implements MutableContra
 
     @Override
     public boolean destroy() {
-        onDestroy.accept(this);
-        return true;
+        return false;
     }
 }

@@ -1,16 +1,16 @@
 package io.github.thecrazyphoenix.societies.event;
 
 import io.github.thecrazyphoenix.societies.api.society.Society;
-import io.github.thecrazyphoenix.societies.api.event.SocietyChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangeSocietyEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.impl.AbstractEvent;
 
-public class SocietyChangeEventImpl extends AbstractEvent implements SocietyChangeEvent {
+public class ChangeSocietyEventImpl extends AbstractEvent implements ChangeSocietyEvent {
     private boolean cancelled;
     private Cause cause;
     private Society society;
 
-    public SocietyChangeEventImpl(Cause cause, Society society) {
+    public ChangeSocietyEventImpl(Cause cause, Society society) {
         this.cause = cause;
         this.society = society;
     }
@@ -35,13 +35,13 @@ public class SocietyChangeEventImpl extends AbstractEvent implements SocietyChan
         return cause;
     }
 
-    public static class Create extends SocietyChangeEventImpl implements SocietyChangeEvent.Create {
+    public static class Create extends ChangeSocietyEventImpl implements ChangeSocietyEvent.Create {
         public Create(Cause cause, Society society) {
             super(cause, society);
         }
     }
 
-    public static class Destroy extends SocietyChangeEventImpl implements SocietyChangeEvent.Destroy {
+    public static class Destroy extends ChangeSocietyEventImpl implements ChangeSocietyEvent.Destroy {
         public Destroy(Cause cause, Society society) {
             super(cause, society);
         }

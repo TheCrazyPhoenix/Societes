@@ -1,7 +1,7 @@
 package io.github.thecrazyphoenix.societies.permission;
 
 import io.github.thecrazyphoenix.societies.Societies;
-import io.github.thecrazyphoenix.societies.api.event.PermissionChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangePermissionEvent;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.society.SocietyImpl;
@@ -49,7 +49,7 @@ public abstract class AbstractPermissionHolder<T extends Enum<T>> extends Societ
         return permissions.getOrDefault(permission, PermissionState.NONE);
     }
 
-    protected abstract PermissionChangeEvent createEvent(T permission, PermissionState newState, Cause cause);
+    protected abstract ChangePermissionEvent createEvent(T permission, PermissionState newState, Cause cause);
 
     @SuppressWarnings("unchecked")
     public static class Builder<T, P extends Enum<P>> {

@@ -1,12 +1,12 @@
 package io.github.thecrazyphoenix.societies.society;
 
 import io.github.thecrazyphoenix.societies.Societies;
-import io.github.thecrazyphoenix.societies.api.event.PermissionChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangePermissionEvent;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
 import io.github.thecrazyphoenix.societies.api.society.Member;
 import io.github.thecrazyphoenix.societies.api.society.MemberRank;
-import io.github.thecrazyphoenix.societies.event.MemberRankChangeEventImpl;
+import io.github.thecrazyphoenix.societies.event.ChangeMemberRankEventImpl;
 import io.github.thecrazyphoenix.societies.permission.AbsolutePermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.AbstractPermissionHolder;
 import io.github.thecrazyphoenix.societies.permission.PowerlessPermissionHolder;
@@ -80,7 +80,7 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
     public boolean setTitle(Text newTitle, Cause cause) {
         if (!CommonMethods.isValidName(newTitle.toPlain())) {
             throw new IllegalArgumentException("illegal title: " + newTitle.toPlain());
-        } else if (!societies.queueEvent(new MemberRankChangeEventImpl.ChangeTitle(cause, this, newTitle))) {
+        } else if (!societies.queueEvent(new ChangeMemberRankEventImpl.ChangeTitle(cause, this, newTitle))) {
             title = newTitle;
             societies.onSocietyModified();
             return true;
@@ -95,7 +95,7 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
 
     @Override
     public boolean setDescription(Text newDescription, Cause cause) {
-        if (!societies.queueEvent(new MemberRankChangeEventImpl.ChangeDescription(cause, this, newDescription))) {
+        if (!societies.queueEvent(new ChangeMemberRankEventImpl.ChangeDescription(cause, this, newDescription))) {
             description = newDescription;
             societies.onSocietyModified();
             return true;
@@ -127,7 +127,7 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
 
     @Override
     public boolean destroy(Cause cause) {
-        if (!societies.queueEvent(new MemberRankChangeEventImpl.Destroy(cause, this))) {
+        if (!societies.queueEvent(new ChangeMemberRankEventImpl.Destroy(cause, this))) {
             society.getRanksRaw().remove(id);
             if (parent != null) {
                 parent.getChildrenRaw().remove(id);
@@ -139,8 +139,8 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
     }
 
     @Override
-    protected PermissionChangeEvent createEvent(MemberPermission permission, PermissionState newState, Cause cause) {
-        return new MemberRankChangeEventImpl.ChangePermission(cause, this, permission, newState);
+    protected ChangePermissionEvent createEvent(MemberPermission permission, PermissionState newState, Cause cause) {
+        return new ChangeMemberRankEventImpl.ChangePermission(cause, this, permission, newState);
     }
 
     Map<String, MemberRank> getChildrenRaw() {
@@ -153,7 +153,7 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
 
     public class RankContract extends MutableFixedContract implements MemberRank.RankContract {
         public RankContract(String name, String currency, long interval, BigDecimal amount) {
-            super(MemberRankImpl.this.societies, MemberRankImpl.this.society, name, currency, interval, amount, viewMembers.values(), contracts::remove);
+            super(MemberRankImpl.this.societies, MemberRankImpl.this.society, name, currency, interval, amount, viewMembers.values());
         }
 
         @Override
@@ -169,6 +169,12 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
         @Override
         public MemberRank getRank() {
             return MemberRankImpl.this;
+        }
+
+        @Override
+        public boolean destroy() {
+            contracts.remove(this);
+            return true;
         }
     }
 
@@ -216,7 +222,7 @@ public class MemberRankImpl extends AbstractPermissionHolder<MemberPermission> i
             CommonMethods.checkNotNullState(title, "title is mandatory");
             description = CommonMethods.orDefault(description, Text.EMPTY);
             MemberRankImpl memberRank = new MemberRankImpl(this);
-            if (!societies.queueEvent(new MemberRankChangeEventImpl.Create(cause, memberRank))) {
+            if (!societies.queueEvent(new ChangeMemberRankEventImpl.Create(cause, memberRank))) {
                 society.getRanksRaw().put(memberRank.getIdentifier(), memberRank);
                 if (parent != null) {
                     parent.getChildrenRaw().put(memberRank.getIdentifier(), memberRank);

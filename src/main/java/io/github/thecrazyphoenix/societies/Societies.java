@@ -84,7 +84,7 @@ public class Societies {
             ConfigurationNode node = pluginDataLoader.load();
             continueAfterFailure = node.getNode("continue-on-critical-error").getBoolean();
 
-            node = societiesDataLoader.load().getNode("societies");
+            node = societiesDataLoader.load();
             societies.clear();
             allSocieties.clear();
             societySerializer.deserializeSocieties(node);

@@ -1,6 +1,6 @@
 package io.github.thecrazyphoenix.societies.event;
 
-import io.github.thecrazyphoenix.societies.api.event.MemberRankChangeEvent;
+import io.github.thecrazyphoenix.societies.api.event.ChangeMemberRankEvent;
 import io.github.thecrazyphoenix.societies.api.permission.ClaimPermission;
 import io.github.thecrazyphoenix.societies.api.permission.MemberPermission;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
@@ -9,10 +9,10 @@ import io.github.thecrazyphoenix.societies.api.society.MemberRank;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 
-public class MemberRankChangeEventImpl extends SocietyElementChangeEventImpl implements MemberRankChangeEvent {
+public class ChangeMemberRankEventImpl extends ChangeSocietyElementEventImpl implements ChangeMemberRankEvent {
     private MemberRank memberRank;
 
-    public MemberRankChangeEventImpl(Cause cause, MemberRank memberRank) {
+    public ChangeMemberRankEventImpl(Cause cause, MemberRank memberRank) {
         super(cause, memberRank);
         this.memberRank = memberRank;
     }
@@ -22,19 +22,19 @@ public class MemberRankChangeEventImpl extends SocietyElementChangeEventImpl imp
         return memberRank;
     }
 
-    public static class Create extends MemberRankChangeEventImpl implements MemberRankChangeEvent.Create {
+    public static class Create extends ChangeMemberRankEventImpl implements ChangeMemberRankEvent.Create {
         public Create(Cause cause, MemberRank memberRank) {
             super(cause, memberRank);
         }
     }
 
-    public static class Destroy extends MemberRankChangeEventImpl implements MemberRankChangeEvent.Destroy {
+    public static class Destroy extends ChangeMemberRankEventImpl implements ChangeMemberRankEvent.Destroy {
         public Destroy(Cause cause, MemberRank memberRank) {
             super(cause, memberRank);
         }
     }
 
-    public static class ChangeTitle extends MemberRankChangeEventImpl implements MemberRankChangeEvent.ChangeTitle {
+    public static class ChangeTitle extends ChangeMemberRankEventImpl implements ChangeMemberRankEvent.ChangeTitle {
         private Text newTitle;
 
         public ChangeTitle(Cause cause, MemberRank memberRank, Text newTitle) {
@@ -48,7 +48,7 @@ public class MemberRankChangeEventImpl extends SocietyElementChangeEventImpl imp
         }
     }
 
-    public static class ChangeDescription extends MemberRankChangeEventImpl implements MemberRankChangeEvent.ChangeDescription {
+    public static class ChangeDescription extends ChangeMemberRankEventImpl implements ChangeMemberRankEvent.ChangeDescription {
         private Text newDescription;
 
         public ChangeDescription(Cause cause, MemberRank memberRank, Text newDescription) {
@@ -62,7 +62,7 @@ public class MemberRankChangeEventImpl extends SocietyElementChangeEventImpl imp
         }
     }
 
-    public static class ChangePermission extends MemberRankChangeEventImpl implements MemberRankChangeEvent.ChangePermission {
+    public static class ChangePermission extends ChangeMemberRankEventImpl implements ChangeMemberRankEvent.ChangePermission {
         private MemberPermission changedPermission;
         private PermissionState newValue;
 
@@ -83,7 +83,7 @@ public class MemberRankChangeEventImpl extends SocietyElementChangeEventImpl imp
         }
     }
 
-    public static class ChangeClaimPermission extends MemberRankChangeEventImpl implements MemberRankChangeEvent.ChangeClaimPermission {
+    public static class ChangeClaimPermission extends ChangeMemberRankEventImpl implements ChangeMemberRankEvent.ChangeClaimPermission {
         private Claim claim;
         private ClaimPermission changedPermission;
         private PermissionState newValue;

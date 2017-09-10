@@ -4,7 +4,7 @@ import com.flowpowered.math.vector.Vector3i;
 import io.github.thecrazyphoenix.societies.Societies;
 import io.github.thecrazyphoenix.societies.api.society.Claim;
 import io.github.thecrazyphoenix.societies.api.society.Cuboid;
-import io.github.thecrazyphoenix.societies.event.CuboidChangeEventImpl;
+import io.github.thecrazyphoenix.societies.event.ChangeCuboidEventImpl;
 import io.github.thecrazyphoenix.societies.society.internal.SocietyElementImpl;
 import io.github.thecrazyphoenix.societies.util.CommonMethods;
 import org.spongepowered.api.event.cause.Cause;
@@ -72,7 +72,7 @@ public class CuboidImpl extends SocietyElementImpl implements Cuboid {
 
     @Override
     public boolean destroy(Cause cause) {
-        if (!societies.queueEvent(new CuboidChangeEventImpl.Destroy(cause, this))) {
+        if (!societies.queueEvent(new ChangeCuboidEventImpl.Destroy(cause, this))) {
             parent.getClaimCuboidsRaw().remove(this);
             return true;
         }
@@ -101,7 +101,7 @@ public class CuboidImpl extends SocietyElementImpl implements Cuboid {
         public Optional<? extends CuboidImpl> build(Cause cause) {
             build();
             CuboidImpl cuboid = new CuboidImpl(this);
-            if (!societies.queueEvent(new CuboidChangeEventImpl.Create(cause, cuboid))) {
+            if (!societies.queueEvent(new ChangeCuboidEventImpl.Create(cause, cuboid))) {
                 parent.getClaimCuboidsRaw().add(cuboid);
                 societies.onSocietyModified();
                 return Optional.of(cuboid);

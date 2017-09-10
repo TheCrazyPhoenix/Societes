@@ -4,6 +4,7 @@ import com.flowpowered.math.vector.Vector3i;
 import io.github.thecrazyphoenix.societies.Societies;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionHolder;
 import io.github.thecrazyphoenix.societies.api.permission.PermissionState;
+import io.github.thecrazyphoenix.societies.api.society.SocietyElement;
 import io.github.thecrazyphoenix.societies.permission.DefaultPermissionHolder;
 import io.github.thecrazyphoenix.societies.society.SocietyImpl;
 import org.spongepowered.api.text.Text;
@@ -31,6 +32,12 @@ public class CommonMethods {
     public static void checkNotNullState(Object object, String message) {
         if (object == null) {
             throw new IllegalStateException(message);
+        }
+    }
+
+    public static void checkMatchingSociety(SocietyElement a, SocietyElement b) {
+        if (a.getSociety() != b.getSociety()) {
+            throw new IllegalArgumentException("element must have the same society");
         }
     }
 

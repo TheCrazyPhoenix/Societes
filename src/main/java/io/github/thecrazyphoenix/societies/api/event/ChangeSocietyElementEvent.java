@@ -5,7 +5,7 @@ import io.github.thecrazyphoenix.societies.api.society.SocietyElement;
 /**
  * Base event for when a society element's data is modified
  */
-public interface SocietyElementChangeEvent extends SocietyChangeEvent {
+public interface ChangeSocietyElementEvent extends ChangeSocietyEvent {
     /**
      * Retrieves the element modified by this event.
      * This will always return the element whose data is modified even if other elements are associated with this event.
@@ -17,10 +17,10 @@ public interface SocietyElementChangeEvent extends SocietyChangeEvent {
     /**
      * Called when a society element is created.
      */
-    interface Create extends SocietyElementChangeEvent {}
+    interface Create extends ChangeSocietyElementEvent {}
 
     /**
      * Called when a society element is destroyed.
      */
-    interface Destroy extends SocietyElementChangeEvent {}
+    interface Destroy extends ChangeSocietyElementEvent {}
 }
